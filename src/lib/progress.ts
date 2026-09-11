@@ -130,6 +130,14 @@ export async function syncEnrollmentCompletion(
       metadata: { percentage: 100, completedAt: now.toISOString() },
     });
 
+    // Intentar emitir certificado automáticamente si cumple la nota aprobatoria (PLAN.md)
+    try {
+      const { checkAndIssueCertificate } = await import('./certificates');
+      await checkAndIssueCertificate(userId, courseId);
+    } catch (certErr) {
+      console.warn('Error al verificar certificado:', certErr);
+    }
+
     return {
       status: EnrollmentStatus.COMPLETED,
       percentage: 100,

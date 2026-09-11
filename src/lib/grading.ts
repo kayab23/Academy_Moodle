@@ -202,6 +202,14 @@ export async function evaluateAttempt(attemptId: string): Promise<AttemptEvaluat
 
       // Sincronizar finalización del curso
       await syncEnrollmentCompletion(attempt.userId, courseId);
+
+      // Verificar y emitir certificado si el curso ya está completo y aprobado
+      try {
+        const { checkAndIssueCertificate } = await import('./certificates');
+        await checkAndIssueCertificate(attempt.userId, courseId);
+      } catch (certErr) {
+        console.warn('Error al verificar certificado post-evaluación:', certErr);
+      }
     }
 
     await logActivity({

@@ -292,5 +292,29 @@
     "score": "Score (%)",
     "date": "Assessment Date",
     "courseAverage": "Calculated Course Grade"
+  },
+  "certificates": {
+    "title": "Certificates & Accreditations",
+    "subtitle": "View and download your official certificates earned upon completing training.",
+    "search": "Search by course title or certificate number...",
+    "downloadPdf": "Download PDF",
+    "folio": "Certificate #",
+    "finalGrade": "Final Grade",
+    "issuedDate": "Issue Date",
+    "noCertificates": "You do not have any certificates issued yet. Complete courses to earn accreditations.",
+    "certificateOf": "Certificate of Completion",
+    "verified": "Official Verified Accreditation",
+    "totalCertificates": "{count} certificates earned"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadCount": "{count} new",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "You have no pending notifications.",
+    "viewDetails": "View details",
+    "justNow": "Just now",
+    "certificateReady": "Your certificate for {course} is ready to download!",
+    "courseEnrolled": "You have been enrolled in {course}.",
+    "quizGraded": "Your quiz submission for {course} has been graded."
   }
 }

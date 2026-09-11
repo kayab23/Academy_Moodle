@@ -4,6 +4,7 @@ import React from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { LogOut, Globe, User as UserIcon, Building2 } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 
 interface NavbarProps {
   companyName?: string;
@@ -67,6 +68,9 @@ export function Navbar({ companyName, companySlug }: NavbarProps) {
 
       {/* Right: Actions & User Info */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+        {/* In-app Notifications Bell */}
+        <NotificationBell />
+
         {/* Language Switcher */}
         <button
           onClick={toggleLocale}

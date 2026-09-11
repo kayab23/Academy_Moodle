@@ -292,5 +292,29 @@
     "score": "Nota (%)",
     "date": "Fecha de evaluación",
     "courseAverage": "Nota final calculada"
+  },
+  "certificates": {
+    "title": "Acreditaciones y Certificados",
+    "subtitle": "Consulta y descarga los certificados oficiales obtenidos tras completar tus capacitaciones.",
+    "search": "Buscar por nombre de curso o folio...",
+    "downloadPdf": "Descargar PDF",
+    "folio": "Folio",
+    "finalGrade": "Calificación final",
+    "issuedDate": "Fecha de emisión",
+    "noCertificates": "Aún no tienes certificados emitidos. Completa cursos aprobatorios para obtener tus acreditaciones.",
+    "certificateOf": "Certificado de Acreditación",
+    "verified": "Acreditación Oficial Verificada",
+    "totalCertificates": "{count} certificados obtenidos"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "unreadCount": "{count} nuevas",
+    "markAllRead": "Marcar todas como leídas",
+    "noNotifications": "No tienes notificaciones pendientes.",
+    "viewDetails": "Ver detalle",
+    "justNow": "Hace un momento",
+    "certificateReady": "¡Tu certificado de {course} está listo para descargar!",
+    "courseEnrolled": "Has sido inscrito en el curso {course}.",
+    "quizGraded": "Tu evaluación en {course} ha sido calificada."
   }
 }

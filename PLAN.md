@@ -449,12 +449,15 @@ SIGE_SERVICE_TOKEN=
 - [x] **Criterio de aceptación**: un Collaborator resuelve un quiz con preguntas cerradas y obtiene calificación automática inmediata; un Instructor puede calificar manualmente una pregunta abierta y el Gradebook refleja el cambio — **probado y verificado de extremo a extremo contra PostgreSQL local**.
 
 ### Fase 5 — Certificados y Notificaciones (Semanas 9-10)
-- [ ] Generación de certificados PDF según la regla de emisión definida
-- [ ] Templates de certificados con branding por empresa
-- [ ] Sistema de notificaciones en-app
-- [ ] Notificaciones por email vía SMTP (opcional, controlado por `.env`)
-- [ ] Galería de certificados del usuario
-- [ ] **Criterio de aceptación**: al completar el 100% de un curso con nota aprobatoria, se genera automáticamente un certificado descargable con folio único y el branding de la empresa correcta.
+
+**Estado (construido y probado de extremo a extremo contra Postgres real el 2026-09-11)**: Generación automática de certificados en PDF apaisado vectorial (`pdf-lib`) con doble marco ornamental, colores corporativos institucionales según la empresa (`primaryColor`, `secondaryColor`), nombre del alumno, curso, nota final y folio global único (`ACAD-[COMPANY]-[YEAR]-[HEX]`); emisión automática ligada al cumplimiento simultáneo del 100% de lecciones requeridas y nota aprobatoria (`checkAndIssueCertificate`); almacenamiento físico en `UPLOADS_DIR/certificates/` y endpoint autenticado de streaming/descarga (`GET /api/certificates/[certificateNumber]/download`); galería personal de certificados (`/certificates`, `CertificateCard.tsx`); sistema de notificaciones in-app con campana interactiva en el Navbar (`NotificationBell.tsx`, `/api/notifications`), badge de conteo no leído y despacho opcional desacoplado por email vía SMTP (`nodemailer`).
+
+- [x] Generación de certificados PDF según la regla de emisión definida — `src/lib/certificates.ts` (`generateCertificatePdfBytes`, `checkAndIssueCertificate`), `pdf-lib`
+- [x] Templates de certificados con branding por empresa — marco decorativo con paleta de color (`primaryColor`/`secondaryColor`), nombre de empresa y folio corporativo
+- [x] Sistema de notificaciones en-app — `src/lib/notifications.ts`, `/api/notifications/`, `NotificationBell.tsx` con badge de conteo y panel flotante
+- [x] Notificaciones por email vía SMTP (opcional, controlado por `.env`) — integración no bloqueante con `nodemailer` si variables SMTP están presentes
+- [x] Galería de certificados del usuario — `src/app/(dashboard)/certificates/page.tsx`, `CertificateCard.tsx` con descarga directa en PDF
+- [x] **Criterio de aceptación**: al completar el 100% de un curso con nota aprobatoria, se genera automáticamente un certificado descargable con folio único y el branding de la empresa correcta — **probado y verificado de extremo a extremo contra PostgreSQL local**.
 
 ### Fase 6 — Reportes y Polish (Semanas 11-12)
 - [ ] Dashboard administrativo con KPIs (con filtro por empresa)
