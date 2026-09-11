@@ -77,9 +77,16 @@ export async function GET(req: NextRequest) {
     // 2. Vista de Instructor / Manager / Admin
     if (!courseId) {
       // Devolver lista de cursos gestionables para seleccionar
-      const whereCourse: { assignedCompanies?: { some: { companyId: string } } } = {};
+      const whereCourse: {
+        assignedCompanies?: { some: { companyId: string } };
+        instructorId?: string;
+      } = {};
       if (user.role === Role.MANAGER) {
         whereCourse.assignedCompanies = { some: { companyId: user.companyId } };
+      } else if (user.role === Role.INSTRUCTOR) {
+        // Mismo criterio que en certificados: un instructor solo administra
+        // el gradebook de los cursos que él mismo imparte.
+        whereCourse.instructorId = user.id;
       }
 
       const courses = await db.course.findMany({
@@ -118,6 +125,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (!canAccessCourse(user, course)) {
+      return NextResponse.json({ error: 'Acceso no permitido' }, { status: 403 });
+    }
+
+    // Mismo criterio que en certificados: un instructor que no imparte este
+    // curso no debe ver el gradebook completo de otros compañeros/empresas.
+    if (user.role === Role.INSTRUCTOR && course.instructorId !== user.id) {
       return NextResponse.json({ error: 'Acceso no permitido' }, { status: 403 });
     }
 
