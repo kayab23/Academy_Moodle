@@ -376,6 +376,9 @@ MAX_DOCUMENT_SIZE_MB=25
 
 # Conversión de documentos
 LIBREOFFICE_PATH=soffice
+
+# Integración con SIGE (portal de departamentos) — ver "Diseño definitivo de integración"
+SIGE_SERVICE_TOKEN=
 ```
 
 ### Scripts esperados en `package.json`
@@ -475,7 +478,46 @@ Todos los módulos corren hoy en un único servidor físico on-premise: **`SER-D
 **Principio arquitectónico ya validado en producción y que Academy LMS DEBE seguir**: el ecosistema es una **integración federada de aplicaciones independientes**, no un monolito ni un esquema de base de datos compartido. Cada módulo:
 - Tiene su propio stack tecnológico (no todos son Next.js/Node — hay Python ASGI, Express, Nginx puro), su propio proceso, y **su propia base de datos**. SIGE, por ejemplo, no comparte tablas con CRM ni con Vitaris.
 - Se integra con el resto **solo a dos niveles**: (a) infraestructura compartida (mismo servidor físico, mismo Nginx, mismo túnel/dominio Cloudflare — así el usuario final percibe una "suite" coherente vía subdominios memorables), y (b) llamadas puntuales servidor-a-servidor cuando un módulo necesita un dato de otro (patrón ya usado entre Vitaris y CRM: token de servicio dedicado, origen explícitamente permitido, `credentials: false` — nunca sesión de usuario compartida entre subdominios).
-- NO existe hoy SSO/login único entre módulos. Cada app tiene su propio sistema de autenticación independiente (SIGE usa JWT propio con tabla `users` propia). Academy LMS sigue el mismo patrón: su propio NextAuth, su propia tabla `User`, sin intentar compartir sesión con SIGE u otros módulos en esta fase.
+- No existe una sesión compartida real entre módulos (cada app sigue emitiendo y validando su propia sesión). Lo que **sí existe como diseño definitivo** es un puente de identidad de un solo uso iniciado por SIGE hacia Academy — ver "Diseño definitivo de integración" más abajo — para que SIGE actúe como portal/ERP y Academy se sienta como un departamento embebido en él, sin que eso implique compartir cookies ni tablas de sesión entre los dos.
+
+### Diseño definitivo de integración: Academy como departamento embebido en el portal SIGE
+
+**SIGE es el portal/ERP; Academy es un departamento que vive dentro de él** — igual que, más adelante, lo serán Jurídico o Recursos Humanos. Este diseño reemplaza cualquier idea anterior de "un enlace que saca al usuario de SIGE a otra pestaña": la experiencia objetivo es que el usuario **nunca sale de `sige.corposuitekrv.com`** al usar Academy.
+
+#### Experiencia de usuario
+
+1. El usuario tiene sesión abierta en SIGE y ve una entrada nueva en su navbar (`Layout.tsx`): **"Capacitación"**.
+2. Al hacer clic, SIGE pide —servidor a servidor— un enlace de acceso de un solo uso a Academy y lo **monta en un `<iframe>` dentro de su propia interfaz**. La URL en el navegador sigue siendo la de SIGE en todo momento.
+3. Ese iframe carga Academy ya autenticado, sin pantalla de login, con el navbar propio de Academy oculto (para no duplicar navegación) y mostrando solo el contenido del departamento.
+
+#### Arquitectura de identidad: SIGE manda, Academy obedece
+
+SIGE es la fuente de verdad de usuarios y empresa (ya tiene ~250 colaboradores reales). Academy **no levanta un sistema de alta de usuarios paralelo**: cuando SIGE pide el primer enlace de acceso para un usuario que Academy todavía no conoce, Academy lo da de alta en ese mismo momento con los datos que SIGE le entrega (email, nombre, empresa, rol). Esto sustituye, como mecanismo principal, la idea de un job de sincronización por lote corriendo de fondo (ver "Alta de usuarios" más abajo).
+
+#### Contrato técnico
+
+- **Endpoint nuevo en Academy** (a construir): `POST /api/integrations/sige/sso-issue`
+  - Autenticado con un token de servicio dedicado (`SIGE_SERVICE_TOKEN`), nunca con la sesión del usuario final — mismo patrón ya validado en producción entre Vitaris y CRM.
+  - Recibe `{ email, fullName, companySlug, role }` — SIGE ya tiene estos datos en `profiles`/`collaborator_registry`, normalizando `empresa` a minúsculas tal como se documentó arriba.
+  - Efecto: busca el `User` por email; si no existe, lo crea (`companyId` resuelto desde `companySlug`); genera un token de acceso de un solo uso con expiración corta (ej. 60 segundos) — mismo patrón que `account_activation_tokens`/`password_reset_tokens` ya usado en SIGE.
+  - Responde `{ accessUrl: "https://academy.corposuitekrv.com/enlace-acceso?token=..." }`.
+- **Página nueva en Academy** (a construir): `/enlace-acceso?token=...`
+  - Valida el token (existe, no usado, no expirado), lo marca usado, crea la sesión NextAuth normal (mismo `authOptions` de siempre) y redirige a `/dashboard`.
+  - Detecta si corre dentro de un iframe (`window.self !== window.top`) y, si es así, oculta su propio navbar/sidebar de nivel superior — para no duplicar la navegación que ya provee SIGE alrededor.
+- **Cabecera de seguridad** (excepción puntual y acotada, no una relajación general): en `next.config.js`, sustituir el `X-Frame-Options: DENY` genérico por `Content-Security-Policy: frame-ancestors 'self' https://sige.corposuitekrv.com;`. Sigue bloqueado para cualquier otro sitio del mundo — la única excepción, a propósito, es `sige.corposuitekrv.com`.
+- **Del lado de SIGE**: la entrada de navbar, la llamada al endpoint de arriba, y el `<iframe>` que consume `accessUrl`. Instrucciones completas y precisas para ese lado en el archivo `SIGE_INTEGRATION.md` (en la raíz de este repo), pensado para copiarse al repositorio de SIGE y ejecutarse ahí por otro agente.
+
+#### Por qué esto sigue siendo un módulo independiente, no un monolito
+
+Nada de la lógica de negocio de Academy (cursos, calificaciones, certificados, progreso) se mueve a SIGE ni viceversa. Academy conserva su propia base de datos, su propio proceso, su propio deploy. Lo único que cruza la frontera es: (a) la identidad en el momento del primer acceso, vía un token de un solo uso — nunca una sesión compartida de verdad — y (b) el permiso puntual de ser enmarcado por ese origen específico. Si Academy se cae, SIGE sigue funcionando normal (solo la pestaña "Capacitación" no carga); si algún día se decide que Academy deje de vivir dentro de SIGE, basta con quitar el iframe y el navbar de SIGE — Academy sigue funcionando sola, sin cambios en su código.
+
+#### Limitación conocida a vigilar: cookies de terceros en el iframe
+
+El iframe carga contenido de `academy.corposuitekrv.com` dentro de una página cuyo origen top-level es `sige.corposuitekrv.com` — es, técnicamente, un iframe **cross-origin**. Navegadores modernos (Safari/ITP desde hace años, Firefox cada vez más, y Chrome anunciando lo mismo) restringen o bloquean cookies de terceros dentro de iframes cross-origin por defecto. Esto puede romper la persistencia de la sesión de Academy dentro del iframe (el login vía el token de un solo uso funcionaría, pero una recarga de esa sección podría perder la sesión en navegadores estrictos). Mitigación mínima: configurar la cookie de sesión de NextAuth con `SameSite=None; Secure` (obligatorio para que un cross-origin iframe pueda leerla) — pero esto no resuelve el bloqueo total en Safari. **Antes de dar este diseño por cerrado en producción, hay que probarlo explícitamente en Safari e iOS** (no solo Chrome/Edge, donde sí funcionará sin problema); si el bloqueo resulta inaceptable para el navegador que use la mayoría de los colaboradores, la alternativa sería pasar el token por `postMessage` en vez de depender de cookies — cambio de diseño que no se hace ahora, solo se deja anotado como plan B.
+
+#### Repetible para futuros departamentos
+
+Jurídico, Recursos Humanos y cualquier módulo futuro del ERP siguen exactamente este mismo molde: app propia e independiente + un endpoint `sso-issue` equivalente + entrada de navbar en SIGE + excepción de `frame-ancestors` para ese departamento específico. No hay que rediseñar nada la próxima vez que se agregue uno.
 
 ### Pasos precisos para desplegar Academy LMS como módulo #6
 
@@ -550,9 +592,11 @@ Todos los módulos corren hoy en un único servidor físico on-premise: **`SER-D
 
 Para que un cruce de datos futuro entre módulos sea trivial sin necesitar una migración, el identificador de empresa DEBE normalizarse igual en todos los módulos: `kezelmedica`, `vitaris`, `redbeat` (minúsculas, sin espacios ni acentos) — que es exactamente como ya está modelado `Company.slug` en el schema de Academy LMS. **Verificado en el código real de SIGE** (`backend/migrate.js`, tabla `collaborator_registry`, y su índice `idx_collab_registry_empresa ON collaborator_registry(UPPER(empresa))`): SIGE guarda la empresa como texto libre en mayúsculas sin espacios (`'KEZELMEDICA' | 'VITARIS' | 'REDBEAT'`, según `ARQUITECTURA.md` del repo SIGE) — la normalización hacia el slug de Academy es entonces solo un `.toLowerCase()`, no un mapeo de nombres distintos como se había asumido antes de revisar el código.
 
-### Sincronización de colaboradores con SIGE (diseño verificado contra el código real, no construido todavía)
+### Alta de usuarios: creación al primer acceso (reemplaza el job de sincronización por lote)
 
-SIGE ya es la fuente de verdad operativa de "quién trabaja aquí, en qué empresa, en qué puesto" — tiene ~250 colaboradores dados de alta vía su flujo de onboarding (`collaborator_registry` → `POST /api/collaborators`). Antes de comprometer un diseño de sincronización, se revisó el schema real (`backend/migrate.js`) y las rutas reales (`backend/routes/collaborators.js`, `backend/routes/users.js`) de SIGE para no asumir campos que no existen. Hallazgos concretos:
+El mecanismo **principal** de alta de usuarios en Academy ya no es un job programado que sincroniza toda la lista de colaboradores — es la creación on-demand descrita en "Diseño definitivo de integración": la primera vez que SIGE pide un enlace de acceso para alguien, Academy lo crea con los datos que recibe en ese momento. Esto es más simple y evita mantener un job de sincronización corriendo de fondo. La investigación del schema real de SIGE que sigue abajo se conserva porque sus hallazgos (sobre todo el de la "baja") siguen aplicando igual de directo al nuevo mecanismo.
+
+SIGE ya es la fuente de verdad operativa de "quién trabaja aquí, en qué empresa, en qué puesto" — tiene ~250 colaboradores dados de alta vía su flujo de onboarding (`collaborator_registry` → `POST /api/collaborators`). Antes de comprometer el diseño de arriba, se revisó el schema real (`backend/migrate.js`) y las rutas reales (`backend/routes/collaborators.js`, `backend/routes/users.js`) de SIGE para no asumir campos que no existen. Hallazgos concretos:
 
 | Dato necesario para Academy | ¿Existe en SIGE hoy? | Dónde |
 |:---|:---|:---|
@@ -562,13 +606,11 @@ SIGE ya es la fuente de verdad operativa de "quién trabaja aquí, en qué empre
 | **Flag de colaborador activo/inactivo (baja)** | **No existe.** Ni `users` ni `profiles` tienen columna `is_active`/`disabled`. `collaborator_registry.status` solo cubre el ciclo de **alta** (`pendiente` → `revisado` → `incorporado` → `rechazado`), no el de **baja**. | — |
 | Endpoint que exponga email+empresa+rol de todos los colaboradores activos, sin restricción a un solo campo de filtro de dashboard | Parcial. `GET /api/users` existe pero es solo-admin y no incluye `empresa`; el detalle completo (`GET /api/users/:id`) sí trae `empresa` pero es por colaborador, uno a la vez. | `backend/routes/users.js` |
 
-**Consecuencia directa para el diseño**: la parte de "cuando alguien causa baja en SIGE, Academy lo desactiva automáticamente" que propuse antes **no se puede construir tal cual hoy** — SIGE no tiene ese dato todavía. Antes de implementar la sincronización automática hay que decidir una de estas dos cosas (no lo decido yo, es una decisión de negocio/operación):
-1. Agregar una columna de baja/estado a `users`/`profiles` en SIGE primero (cambio en el otro repo, fuera del alcance de Academy), o
-2. Que la sincronización a Academy sea solo de **altas** por ahora (crear/actualizar colaboradores), y las bajas se seguyan gestionando manualmente en Academy hasta que SIGE tenga ese dato.
+**Consecuencia directa para el diseño (aplica igual al mecanismo de creación al primer acceso)**: la idea de "cuando alguien causa baja en SIGE, Academy lo desactiva automáticamente" **no se puede construir todavía** — SIGE no guarda ese dato hoy. El endpoint `sso-issue` puede confiar en que SIGE solo lo llame para usuarios que SIGE considera vigentes en ese momento (SIGE sí sabe a quién dejó entrar a su propia sesión), pero Academy no tiene forma de enterarse después, por su cuenta, de que alguien fue dado de baja en SIGE — el `User` creado en Academy se queda activo indefinidamente salvo que alguien lo desactive ahí manualmente. Antes de cerrar esto del todo hay que decidir una de estas dos cosas (no lo decido yo, es una decisión de negocio/operación):
+1. Agregar una columna de baja/estado a `users`/`profiles` en SIGE primero (cambio en el otro repo, fuera del alcance de Academy), y que `sso-issue` la consulte y rechace el acceso si el colaborador ya no está activo, o
+2. Aceptar, por ahora, que la desactivación en Academy siga siendo manual, y revisar esto de nuevo cuando SIGE tenga ese dato.
 
 **Patrón reutilizable encontrado y sí recomendable copiar**: SIGE ya resolvió "cómo le doy acceso a alguien sin que un admin tenga que inventarle una contraseña a mano" con una tabla `account_activation_tokens` (`registry_id`, `token_hash`, `expires_at`, `used`) — un token de un solo uso que el propio colaborador usa para activar su cuenta y poner su contraseña. Este es exactamente el patrón que Academy debería usar cuando la sincronización cree un usuario nuevo (en vez de generar una contraseña temporal como hace `POST /api/collaborators/:id/create-account` en SIGE, que es un patrón más viejo dentro del mismo repo).
-
-### Patrón de integración futura entre módulos (no implementar todavía)
 
 ### Patrón de integración futura entre módulos (no implementar todavía)
 

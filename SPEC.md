@@ -67,6 +67,8 @@ DEBEN configurarse globalmente (Next.js `headers()` en `next.config.js`):
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Content-Security-Policy` definida explícitamente
 
+**Excepción única y acotada**: para el diseño de Academy embebido como departamento dentro de SIGE (ver PLAN.md, "Diseño definitivo de integración"), `frame-ancestors` DEBE ampliarse exactamente a `'self' https://sige.corposuitekrv.com` — nunca a `*` ni a un wildcard de dominio. Cualquier origen adicional que necesite enmarcar Academy en el futuro (otro departamento del ERP) DEBE agregarse explícitamente uno por uno, nunca mediante un comodín.
+
 ### 1.10 Secretos y configuración
 
 - NO DEBE commitearse jamás `.env` con valores reales; solo `.env.example` con placeholders.
@@ -81,9 +83,10 @@ DEBEN configurarse globalmente (Next.js `headers()` en `next.config.js`):
 ### 1.12 Integración con otros módulos del ecosistema (CorpoSuite)
 
 - Academy LMS NO DEBE compartir base de datos con ningún otro módulo del ecosistema (SIGE, CRM, RedBeat, Almacén, Vitaris) — cada módulo es dueño exclusivo de sus propios datos.
-- NO DEBE aceptarse una sesión/cookie de otro módulo como prueba de autenticación en Academy — cada módulo mantiene su propio login.
-- Si en el futuro se construye una integración servidor-a-servidor con otro módulo (ver PLAN.md, sección "Integración al Ecosistema CorpoSuite"), DEBE usarse un token de servicio dedicado (no un token de sesión de usuario), con origen explícitamente permitido (whitelist), y sin depender de cookies cross-domain — siguiendo el patrón ya validado en producción entre Vitaris y CRM.
-- Cualquier endpoint expuesto para consumo de otro módulo DEBE ser de solo lectura salvo que se justifique explícitamente lo contrario, y DEBE registrarse en `ActivityLog` como cualquier otra acción sensible.
+- NO DEBE aceptarse una cookie o sesión emitida por otro módulo directamente como prueba de autenticación en Academy. La única excepción autorizada es el puente de identidad de un solo uso descrito en PLAN.md ("Diseño definitivo de integración"): SIGE solicita, servidor a servidor con token de servicio, un token de acceso de un solo uso y corta expiración (≤ 60s) para un email específico; Academy lo consume UNA vez para crear su PROPIA sesión NextAuth — nunca reutiliza ni valida la sesión de SIGE directamente, y el token deja de ser válido inmediatamente después de usarse.
+- Si en el futuro se construye una integración servidor-a-servidor con otro módulo (incluido el puente de identidad de arriba), DEBE usarse un token de servicio dedicado (no un token de sesión de usuario), con origen explícitamente permitido (whitelist), y sin depender de cookies cross-domain — siguiendo el patrón ya validado en producción entre Vitaris y CRM.
+- Cualquier endpoint expuesto para consumo de otro módulo DEBE ser de solo lectura salvo que se justifique explícitamente lo contrario (el puente de identidad es la excepción justificada: crea/actualiza un `User`), y DEBE registrarse en `ActivityLog` como cualquier otra acción sensible.
+- El token de un solo uso del puente de identidad DEBE almacenarse hasheado (nunca en texto plano), marcarse `used` tras su primer consumo, y rechazarse si ya fue usado o si expiró — mismo criterio que `password_reset_tokens`.
 
 ### 1.13 Dependencias y manejo de errores
 
