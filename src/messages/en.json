@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "Academy LMS",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "actions": "Actions",
+    "status": "Status",
+    "search": "Search...",
+    "empty": "No items to display",
+    "back": "Back",
+    "confirm": "Confirm"
+  },
+  "auth": {
+    "loginTitle": "Sign In",
+    "loginSubtitle": "Access the corporate training platform",
+    "emailLabel": "Corporate email",
+    "emailPlaceholder": "employee@company.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Sign In",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Invalid credentials. Please verify your email and password.",
+    "rateLimited": "Too many failed attempts. Please try again later.",
+    "selectCompany": "Company",
+    "logout": "Sign Out"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "courses": "Course Catalog",
+    "myLearning": "My Learning",
+    "gradebook": "Gradebook",
+    "certificates": "Certificates",
+    "users": "Users",
+    "reports": "Reports",
+    "settings": "Settings",
+    "admin": "Admin"
+  },
+  "dashboard": {
+    "title": "Main Dashboard",
+    "welcome": "Welcome back",
+    "kpiActiveCourses": "Active Courses",
+    "kpiCompletedCourses": "Completed Courses",
+    "kpiAvgGrade": "Overall Average",
+    "kpiCertificates": "Certificates",
+    "recentActivity": "Recent Activity",
+    "myCourses": "My In-Progress Courses",
+    "emptyCourses": "You have no enrolled courses at the moment.",
+    "exploreCatalog": "Explore catalog"
+  },
+  "roles": {
+    "ADMIN": "Global Administrator",
+    "MANAGER": "Area Manager",
+    "INSTRUCTOR": "Instructor",
+    "COLLABORATOR": "Collaborator"
+  }
+}

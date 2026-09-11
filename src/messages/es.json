@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "Academy LMS",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "actions": "Acciones",
+    "status": "Estado",
+    "search": "Buscar...",
+    "empty": "No hay elementos para mostrar",
+    "back": "Volver",
+    "confirm": "Confirmar"
+  },
+  "auth": {
+    "loginTitle": "Iniciar Sesión",
+    "loginSubtitle": "Accede a la plataforma de capacitación empresarial",
+    "emailLabel": "Correo electrónico corporativo",
+    "emailPlaceholder": "colaborador@empresa.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Ingresar",
+    "signingIn": "Iniciando sesión...",
+    "invalidCredentials": "Credenciales inválidas. Verifica tu correo y contraseña.",
+    "rateLimited": "Demasiados intentos fallidos. Intenta más tarde.",
+    "selectCompany": "Empresa",
+    "logout": "Cerrar Sesión"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "courses": "Catálogo de Cursos",
+    "myLearning": "Mi Aprendizaje",
+    "gradebook": "Calificaciones",
+    "certificates": "Certificados",
+    "users": "Usuarios",
+    "reports": "Reportes",
+    "settings": "Configuración",
+    "admin": "Administración"
+  },
+  "dashboard": {
+    "title": "Panel Principal",
+    "welcome": "Bienvenido de nuevo",
+    "kpiActiveCourses": "Cursos Activos",
+    "kpiCompletedCourses": "Cursos Completados",
+    "kpiAvgGrade": "Promedio General",
+    "kpiCertificates": "Certificados",
+    "recentActivity": "Actividad Reciente",
+    "myCourses": "Mis Cursos en Curso",
+    "emptyCourses": "No tienes cursos inscritos en este momento.",
+    "exploreCatalog": "Explorar catálogo"
+  },
+  "roles": {
+    "ADMIN": "Administrador Global",
+    "MANAGER": "Gerente de Área",
+    "INSTRUCTOR": "Instructor",
+    "COLLABORATOR": "Colaborador"
+  }
+}
