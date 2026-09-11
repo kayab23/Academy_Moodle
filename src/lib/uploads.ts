@@ -1,4 +1,5 @@
 import path from 'path';
+import { rm } from 'fs/promises';
 import { ResourceType } from '@prisma/client';
 
 export const UPLOADS_ROOT = path.resolve(process.cwd(), process.env.UPLOADS_DIR || './storage/uploads');
@@ -80,6 +81,21 @@ export function sanitizeFileName(original: string): string {
 export interface FileValidationResult {
   valid: boolean;
   error?: string;
+}
+
+/**
+ * Borra del disco la carpeta de un recurso subido (UPLOADS_ROOT/<resourceId>/).
+ * Best-effort: si falla (permisos, ya no existe) se registra y se ignora —
+ * la fila en la base de datos ya se borró y es la fuente de verdad; un
+ * archivo huérfano en disco es una fuga de almacenamiento, no un problema
+ * de integridad de datos.
+ */
+export async function deleteResourceFiles(resourceId: string): Promise<void> {
+  try {
+    await rm(path.join(UPLOADS_ROOT, resourceId), { recursive: true, force: true });
+  } catch (error) {
+    console.warn(`[UPLOADS] No se pudo borrar la carpeta del recurso ${resourceId}:`, (error as Error).message);
+  }
 }
 
 export function validateResourceFile(

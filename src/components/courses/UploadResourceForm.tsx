@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { UploadCloud, X, AlertCircle } from 'lucide-react';
 
 const FILE_TYPES = [
@@ -14,6 +15,9 @@ const FILE_TYPES = [
 
 export function UploadResourceForm({ lessonId }: { lessonId: string }) {
   const router = useRouter();
+  const t = useTranslations('lessons');
+  const tCommon = useTranslations('common');
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [type, setType] = useState('VIDEO');
@@ -47,7 +51,7 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'No se pudo agregar el enlace.');
+        setError(data.error || tCommon('error'));
         setLoading(false);
         return;
       }
@@ -57,7 +61,7 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
     }
 
     if (!file) {
-      setError('Selecciona un archivo.');
+      setError(tCommon('error'));
       return;
     }
 
@@ -67,8 +71,6 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
     formData.append('type', type);
     formData.append('file', file);
 
-    // Se usa XMLHttpRequest (en vez de fetch) porque expone eventos de
-    // progreso de subida, útil para videos grandes.
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `/api/lessons/${lessonId}/resources`);
     xhr.upload.onprogress = (evt) => {
@@ -83,15 +85,15 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
       } else {
         try {
           const data = JSON.parse(xhr.responseText);
-          setError(data.error || 'No se pudo subir el archivo.');
+          setError(data.error || tCommon('error'));
         } catch {
-          setError('No se pudo subir el archivo.');
+          setError(tCommon('error'));
         }
         setLoading(false);
       }
     };
     xhr.onerror = () => {
-      setError('Error de red durante la subida.');
+      setError(tCommon('error'));
       setLoading(false);
     };
     xhr.send(formData);
@@ -100,7 +102,7 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
   if (!open) {
     return (
       <button type="button" className="btn-secondary" style={{ fontSize: 'var(--text-xs)', padding: 'var(--space-1) var(--space-3)' }} onClick={() => setOpen(true)}>
-        <UploadCloud size={14} /> <span>Subir recurso</span>
+        <UploadCloud size={14} /> <span>{t('uploadResource')}</span>
       </button>
     );
   }
@@ -112,7 +114,7 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
       style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', maxWidth: '420px' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <strong style={{ fontSize: 'var(--text-sm)' }}>Subir recurso</strong>
+        <strong style={{ fontSize: 'var(--text-sm)' }}>{t('uploadResource')}</strong>
         <button type="button" onClick={resetForm} disabled={loading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
           <X size={16} />
         </button>
@@ -132,7 +134,7 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
 
       <input
         className="input-field"
-        placeholder="Título del recurso"
+        placeholder={t('resourceTitle')}
         required
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -167,7 +169,7 @@ export function UploadResourceForm({ lessonId }: { lessonId: string }) {
       )}
 
       <button type="submit" className="btn-primary" disabled={loading}>
-        {loading ? `Subiendo... ${type !== 'LINK' ? progress + '%' : ''}` : 'Subir'}
+        {loading ? `${tCommon('loading')} ${type !== 'LINK' ? progress + '%' : ''}` : t('uploadResource')}
       </button>
     </form>
   );

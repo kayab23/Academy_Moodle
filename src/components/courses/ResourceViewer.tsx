@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { FileText, Image as ImageIcon, Link as LinkIcon, Play, Download } from 'lucide-react';
 
 interface ResourceViewerProps {
@@ -15,6 +16,7 @@ interface ResourceViewerProps {
 }
 
 export function ResourceViewer({ resource }: ResourceViewerProps) {
+  const t = useTranslations('lessons');
   const [expanded, setExpanded] = useState(false);
 
   const icon =
@@ -75,10 +77,10 @@ export function ResourceViewer({ resource }: ResourceViewerProps) {
             ) : (
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
                 <p style={{ marginBottom: 'var(--space-2)' }}>
-                  Vista previa no disponible (el servidor no pudo convertir el PPTX a PDF). Puedes descargar el archivo original.
+                  {t('previewUnavailable')}
                 </p>
                 <a href={resource.fileUrl} download={resource.fileName} className="btn-secondary" style={{ display: 'inline-flex' }}>
-                  <Download size={14} /> <span>Descargar</span>
+                  <Download size={14} /> <span>{t('downloadOriginal')}</span>
                 </a>
               </div>
             )

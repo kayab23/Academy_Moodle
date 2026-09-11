@@ -159,7 +159,7 @@ async function main() {
     },
   });
 
-  // 6. Categoría de curso por defecto, para que el formulario "Nuevo curso" no empiece vacío
+  // 6. Categorías de curso por defecto
   await prisma.courseCategory.upsert({
     where: { id: 'cat-seguridad' },
     update: {},
@@ -167,6 +167,26 @@ async function main() {
       id: 'cat-seguridad',
       name: 'Seguridad e Higiene',
       description: 'Cursos obligatorios de seguridad laboral',
+    },
+  });
+
+  await prisma.courseCategory.upsert({
+    where: { id: 'cat-operaciones' },
+    update: {},
+    create: {
+      id: 'cat-operaciones',
+      name: 'Operaciones y Logística',
+      description: 'Procedimientos operativos estándar, almacén y distribución',
+    },
+  });
+
+  await prisma.courseCategory.upsert({
+    where: { id: 'cat-sistemas' },
+    update: {},
+    create: {
+      id: 'cat-sistemas',
+      name: 'Tecnología y Sistemas',
+      description: 'Uso de plataformas, ciberseguridad y herramientas internas',
     },
   });
 

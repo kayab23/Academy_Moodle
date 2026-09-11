@@ -2,13 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Plus, X, Loader2 } from 'lucide-react';
+import { LessonType } from '@prisma/client';
 
 export function AddLessonForm({ moduleId }: { moduleId: string }) {
   const router = useRouter();
+  const t = useTranslations('lessons');
+  const tCommon = useTranslations('common');
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
-  const [type, setType] = useState('VIDEO');
+  const [type, setType] = useState<LessonType>(LessonType.VIDEO);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +28,7 @@ export function AddLessonForm({ moduleId }: { moduleId: string }) {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || 'No se pudo crear la lección.');
+      setError(data.error || tCommon('error'));
       setLoading(false);
       return;
     }
@@ -36,7 +41,7 @@ export function AddLessonForm({ moduleId }: { moduleId: string }) {
   if (!open) {
     return (
       <button type="button" className="btn-secondary" style={{ fontSize: 'var(--text-xs)', padding: 'var(--space-1) var(--space-3)' }} onClick={() => setOpen(true)}>
-        <Plus size={14} /> <span>Agregar lección</span>
+        <Plus size={14} /> <span>{t('newLesson')}</span>
       </button>
     );
   }
@@ -46,7 +51,7 @@ export function AddLessonForm({ moduleId }: { moduleId: string }) {
       <input
         className="input-field"
         style={{ maxWidth: '220px' }}
-        placeholder="Título de la lección"
+        placeholder={t('title')}
         required
         minLength={2}
         value={title}
@@ -54,7 +59,7 @@ export function AddLessonForm({ moduleId }: { moduleId: string }) {
         disabled={loading}
         autoFocus
       />
-      <select className="input-field" style={{ maxWidth: '160px' }} value={type} onChange={(e) => setType(e.target.value)} disabled={loading}>
+      <select className="input-field" style={{ maxWidth: '160px' }} value={type} onChange={(e) => setType(e.target.value as LessonType)} disabled={loading}>
         <option value="VIDEO">Video</option>
         <option value="PRESENTATION">Presentación</option>
         <option value="DOCUMENT">Documento</option>
@@ -62,7 +67,7 @@ export function AddLessonForm({ moduleId }: { moduleId: string }) {
         <option value="QUIZ">Evaluación</option>
       </select>
       <button type="submit" className="btn-primary" disabled={loading}>
-        {loading ? 'Guardando...' : 'Guardar'}
+        {loading ? <Loader2 size={14} className="animate-spin" /> : tCommon('save')}
       </button>
       <button type="button" className="btn-secondary" onClick={() => setOpen(false)} disabled={loading}>
         <X size={16} />

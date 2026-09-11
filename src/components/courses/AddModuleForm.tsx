@@ -2,10 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Plus, X, Loader2 } from 'lucide-react';
 
 export function AddModuleForm({ courseId }: { courseId: string }) {
   const router = useRouter();
+  const t = useTranslations('modules');
+  const tCommon = useTranslations('common');
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +26,7 @@ export function AddModuleForm({ courseId }: { courseId: string }) {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || 'No se pudo crear el módulo.');
+      setError(data.error || tCommon('error'));
       setLoading(false);
       return;
     }
@@ -35,7 +39,7 @@ export function AddModuleForm({ courseId }: { courseId: string }) {
   if (!open) {
     return (
       <button type="button" className="btn-secondary" onClick={() => setOpen(true)}>
-        <Plus size={16} /> <span>Agregar módulo</span>
+        <Plus size={16} /> <span>{t('newModule')}</span>
       </button>
     );
   }
@@ -45,7 +49,7 @@ export function AddModuleForm({ courseId }: { courseId: string }) {
       <input
         className="input-field"
         style={{ maxWidth: '260px' }}
-        placeholder="Título del módulo"
+        placeholder={t('title')}
         required
         minLength={2}
         value={title}
@@ -54,7 +58,7 @@ export function AddModuleForm({ courseId }: { courseId: string }) {
         autoFocus
       />
       <button type="submit" className="btn-primary" disabled={loading}>
-        {loading ? 'Guardando...' : 'Guardar'}
+        {loading ? <Loader2 size={14} className="animate-spin" /> : tCommon('save')}
       </button>
       <button type="button" className="btn-secondary" onClick={() => setOpen(false)} disabled={loading}>
         <X size={16} />

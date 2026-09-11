@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
 interface Category {
@@ -22,6 +23,9 @@ interface NewCourseFormProps {
 
 export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormProps) {
   const router = useRouter();
+  const t = useTranslations('courses');
+  const tCommon = useTranslations('common');
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -44,8 +48,8 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title,
-          description: description || undefined,
+          title: title.trim(),
+          description: description.trim() || undefined,
           categoryId: categoryId || undefined,
           difficulty,
           companyIds: isAdmin ? companyIds : undefined,
@@ -55,7 +59,7 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'No se pudo crear el curso.');
+        setError(data.error || tCommon('error'));
         setLoading(false);
         return;
       }
@@ -63,9 +67,19 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
       router.push(`/courses/${data.id}`);
       router.refresh();
     } catch {
-      setError('Error de red al crear el curso.');
+      setError(tCommon('error'));
       setLoading(false);
     }
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 'var(--text-xs)',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: 'var(--text-secondary)',
+    marginBottom: 'var(--space-2)',
   };
 
   return (
@@ -92,7 +106,7 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
       )}
 
       <div style={{ marginBottom: 'var(--space-4)' }}>
-        <label htmlFor="title" style={labelStyle}>Título</label>
+        <label htmlFor="title" style={labelStyle}>{t('titleLabel')}</label>
         <input
           id="title"
           className="input-field"
@@ -105,7 +119,7 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
       </div>
 
       <div style={{ marginBottom: 'var(--space-4)' }}>
-        <label htmlFor="description" style={labelStyle}>Descripción</label>
+        <label htmlFor="description" style={labelStyle}>{t('descriptionLabel')}</label>
         <textarea
           id="description"
           className="input-field"
@@ -118,32 +132,32 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
         <div>
-          <label htmlFor="category" style={labelStyle}>Categoría</label>
+          <label htmlFor="category" style={labelStyle}>{t('categoryLabel')}</label>
           <select id="category" className="input-field" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={loading}>
-            <option value="">Sin categoría</option>
+            <option value="">{t('noCategory')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </div>
         <div>
-          <label htmlFor="difficulty" style={labelStyle}>Dificultad</label>
+          <label htmlFor="difficulty" style={labelStyle}>{t('difficultyLabel')}</label>
           <select id="difficulty" className="input-field" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} disabled={loading}>
-            <option value="BEGINNER">Principiante</option>
-            <option value="INTERMEDIATE">Intermedio</option>
-            <option value="ADVANCED">Avanzado</option>
+            <option value="BEGINNER">{t('difficultyBeginner')}</option>
+            <option value="INTERMEDIATE">{t('difficultyIntermediate')}</option>
+            <option value="ADVANCED">{t('difficultyAdvanced')}</option>
           </select>
         </div>
       </div>
 
       {isAdmin && companies.length > 0 && (
         <div style={{ marginBottom: 'var(--space-6)' }}>
-          <span style={labelStyle}>Empresas con acceso (vacío = todas)</span>
+          <span style={labelStyle}>{t('companiesAccess')}</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
             {companies.map((c) => (
-              <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
+              <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={companyIds.includes(c.id)} onChange={() => toggleCompany(c.id)} disabled={loading} />
-                {c.name}
+                <span>{c.name}</span>
               </label>
             ))}
           </div>
@@ -154,10 +168,10 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
         {loading ? (
           <>
             <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-            <span>Creando...</span>
+            <span>{tCommon('loading')}</span>
           </>
         ) : (
-          <span>Crear curso</span>
+          <span>{t('newCourse')}</span>
         )}
       </button>
       <style jsx global>{`
@@ -166,13 +180,3 @@ export function NewCourseForm({ categories, companies, isAdmin }: NewCourseFormP
     </form>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 'var(--text-xs)',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  color: 'var(--text-secondary)',
-  marginBottom: 'var(--space-2)',
-};

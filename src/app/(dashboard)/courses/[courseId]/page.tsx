@@ -1,18 +1,25 @@
 import React from 'react';
+import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import { Layers, BookOpen, Clock, Award, ArrowLeft, Edit } from 'lucide-react';
 import { authOptions } from '@/lib/auth';
 import { requireAuth, canAccessCourse, canManageCourse } from '@/lib/scope';
 import { db } from '@/lib/db';
-import { Layers, BookOpen } from 'lucide-react';
 import { AddModuleForm } from '@/components/courses/AddModuleForm';
 import { AddLessonForm } from '@/components/courses/AddLessonForm';
 import { UploadResourceForm } from '@/components/courses/UploadResourceForm';
 import { ResourceViewer } from '@/components/courses/ResourceViewer';
+import { ModuleActions, LessonActions } from '@/components/courses/ModuleActions';
 
 export default async function CourseDetailPage({ params }: { params: { courseId: string } }) {
   const session = await getServerSession(authOptions);
   const user = requireAuth(session);
+  const t = await getTranslations('courses');
+  const tModules = await getTranslations('modules');
+  const tLessons = await getTranslations('lessons');
+  const tCommon = await getTranslations('common');
 
   const course = await db.course.findUnique({
     where: { id: params.courseId },
@@ -42,57 +49,158 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
 
   const canManage = canManageCourse(user, course);
 
+  const statusBadgeClass =
+    course.status === 'PUBLISHED'
+      ? 'badge-success'
+      : course.status === 'ARCHIVED'
+      ? 'badge-error'
+      : 'badge-warning';
+
+  const statusLabel =
+    course.status === 'PUBLISHED'
+      ? t('statusPublished')
+      : course.status === 'ARCHIVED'
+      ? t('statusArchived')
+      : t('statusDraft');
+
+  const difficultyLabel =
+    course.difficulty === 'ADVANCED'
+      ? t('difficultyAdvanced')
+      : course.difficulty === 'INTERMEDIATE'
+      ? t('difficultyIntermediate')
+      : t('difficultyBeginner');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+      {/* Cabecera del Curso */}
       <div className="glass-panel" style={{ padding: 'var(--space-8)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-          <span className={`badge ${course.status === 'PUBLISHED' ? 'badge-success' : course.status === 'ARCHIVED' ? 'badge-error' : 'badge-warning'}`}>
-            {course.status}
-          </span>
-          {course.category && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{course.category.name}</span>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
+          <Link href="/courses" className="btn-secondary" style={{ padding: 'var(--space-1) var(--space-3)', fontSize: 'var(--text-xs)' }}>
+            <ArrowLeft size={14} />
+            <span>{tCommon('back')}</span>
+          </Link>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span className={`badge ${statusBadgeClass}`}>
+              {statusLabel}
+            </span>
+            <span className="badge badge-info">
+              {difficultyLabel}
+            </span>
+            {course.category && (
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{course.category.name}</span>
+            )}
+            {canManage && (
+              <Link href={`/courses/${course.id}/edit`} className="btn-primary" style={{ padding: 'var(--space-1) var(--space-3)', fontSize: 'var(--text-xs)' }}>
+                <Edit size={14} />
+                <span>{t('editCourse')}</span>
+              </Link>
+            )}
+          </div>
         </div>
+
         <h1 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-2)' }}>{course.title}</h1>
         {course.description && (
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{course.description}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{course.description}</p>
         )}
-        <div style={{ display: 'flex', gap: 'var(--space-4)', marginTop: 'var(--space-4)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-          {course.instructor?.name && <span>Instructor: {course.instructor.name}</span>}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginTop: 'var(--space-4)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+          {course.instructor?.name && (
+            <span><strong>{t('instructorLabel')}:</strong> {course.instructor.name}</span>
+          )}
+          {course.estimatedHours !== null && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+              <Clock size={13} /> {course.estimatedHours}h
+            </span>
+          )}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+            <Award size={13} /> {course.passingScore}% min.
+          </span>
           <span>
-            Empresas: {course.assignedCompanies.length === 0 ? 'Todas' : course.assignedCompanies.map((ac) => ac.company.name).join(', ')}
+            <strong>{t('assignedCompanies')}:</strong>{' '}
+            {course.assignedCompanies.length === 0 ? t('allCompanies') : course.assignedCompanies.map((ac) => ac.company.name).join(', ')}
           </span>
         </div>
       </div>
 
+      {/* Módulos y Lecciones */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {course.modules.length === 0 && (
           <div className="glass-panel" style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <Layers size={40} style={{ margin: '0 auto var(--space-3)', color: 'var(--brand-primary)' }} />
-            <p>Este curso todavía no tiene módulos.</p>
+            <p>{t('noModules')}</p>
           </div>
         )}
 
         {course.modules.map((module) => (
           <div key={module.id} className="glass-panel" style={{ padding: 'var(--space-6)' }}>
-            <h2 style={{ fontSize: 'var(--text-lg)', marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <Layers size={18} style={{ color: 'var(--brand-primary)' }} /> {module.title}
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+              <h2 style={{ fontSize: 'var(--text-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <Layers size={18} style={{ color: 'var(--brand-primary)' }} /> {module.title}
+              </h2>
+              {canManage && (
+                <ModuleActions
+                  moduleId={module.id}
+                  initialTitle={module.title}
+                  initialDescription={module.description}
+                />
+              )}
+            </div>
+
+            {module.description && (
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-3)' }}>
+                {module.description}
+              </p>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginLeft: 'var(--space-4)' }}>
               {module.lessons.length === 0 && (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Sin lecciones todavía.</p>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{tModules('noLessons')}</p>
               )}
 
               {module.lessons.map((lesson) => (
                 <div key={lesson.id} style={{ borderLeft: '2px solid var(--border-subtle)', paddingLeft: 'var(--space-4)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                    <BookOpen size={16} style={{ color: 'var(--text-muted)' }} />
-                    <strong style={{ fontSize: 'var(--text-sm)' }}>{lesson.title}</strong>
-                    <span className="badge badge-info" style={{ fontSize: '10px' }}>{lesson.type}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <BookOpen size={16} style={{ color: 'var(--text-muted)' }} />
+                      <strong style={{ fontSize: 'var(--text-sm)' }}>{lesson.title}</strong>
+                      <span className="badge badge-info" style={{ fontSize: '10px' }}>{lesson.type}</span>
+                      {lesson.duration && (
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{lesson.duration} min</span>
+                      )}
+                    </div>
+
+                    {canManage && (
+                      <LessonActions
+                        lessonId={lesson.id}
+                        initialTitle={lesson.title}
+                        initialType={lesson.type}
+                        initialContent={lesson.content}
+                        initialDuration={lesson.duration}
+                        initialIsRequired={lesson.isRequired}
+                      />
+                    )}
                   </div>
+
+                  {lesson.content && (
+                    <div
+                      style={{
+                        padding: 'var(--space-3)',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: 'var(--text-sm)',
+                        color: 'var(--text-secondary)',
+                        marginBottom: 'var(--space-2)',
+                        whiteSpace: 'pre-wrap',
+                      }}
+                    >
+                      {lesson.content}
+                    </div>
+                  )}
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
                     {lesson.resources.length === 0 ? (
-                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Sin recursos todavía.</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{tLessons('noResources')}</span>
                     ) : (
                       lesson.resources.map((resource) => <ResourceViewer key={resource.id} resource={resource} />)
                     )}
