@@ -438,12 +438,15 @@ SIGE_SERVICE_TOKEN=
 - [x] **Criterio de aceptación**: un Collaborator inscrito puede completar todas las lecciones requeridas de un curso y ver su barra de progreso llegar a 100% y su inscripción pasa automáticamente a `COMPLETED` — **verificado con script automatizado contra Postgres local**.
 
 ### Fase 4 — Evaluaciones y Calificaciones (Semanas 7-8)
-- [ ] Creador de quizzes (UI para definir preguntas)
-- [ ] Motor de quizzes (presentación + evaluación automática para tipos cerrados)
-- [ ] Flujo de calificación manual para preguntas `OPEN`
-- [ ] Gradebook — libro de calificaciones por curso, aplicando la regla de agregación definida
-- [ ] Historial de intentos
-- [ ] **Criterio de aceptación**: un Collaborator resuelve un quiz con preguntas cerradas y obtiene calificación automática inmediata; un Instructor puede calificar manualmente una pregunta abierta y el Gradebook refleja el cambio.
+
+**Estado (construido y probado de extremo a extremo contra Postgres real el 2026-09-11)**: Creador de quizzes (`QuizBuilderModal.tsx`, `POST /api/quizzes`, `POST /api/quizzes/[quizId]/questions`) con preguntas de opción múltiple, verdadero/falso, respuesta abierta y correspondencia/matching; motor de examen con cuenta regresiva, aleatorización de preguntas e intentos máximos (`QuizRunner.tsx`, `POST /api/quizzes/[quizId]/attempts`, `POST /api/quizzes/[quizId]/attempts/[attemptId]/submit`); auto-calificación instantánea para preguntas cerradas; flujo de calificación manual para preguntas abiertas (`POST /api/answers/[answerId]/grade`, `ManualGradingModal.tsx`) con recálculo automático de `Grade` y auto-completitud de lección (`UserProgress`); libro de calificaciones integral (**Gradebook**, `/gradebook`) con cálculo de promedio final según regla del plan (promedio simple de lecciones requeridas con nota), exportación a CSV con UTF-8 BOM, y aislamiento multi-tenant estricto.
+
+- [x] Creador de quizzes (UI para definir preguntas) — `QuizBuilderModal.tsx`, `QuizActions.tsx`, `/api/quizzes/`
+- [x] Motor de quizzes (presentación + evaluación automática para tipos cerrados) — `QuizRunner.tsx`, `src/lib/grading.ts` (`evaluateAttempt`), `/api/quizzes/[quizId]/attempts/`
+- [x] Flujo de calificación manual para preguntas `OPEN` — `ManualGradingModal.tsx`, `/api/answers/[answerId]/grade`
+- [x] Gradebook — libro de calificaciones por curso, aplicando la regla de agregación definida — `/gradebook`, `GradebookTable.tsx`, `src/lib/grading.ts` (`calculateCourseGrade`), exportación CSV
+- [x] Historial de intentos — `QuizRunner.tsx` y `/api/quizzes/[quizId]/attempts`
+- [x] **Criterio de aceptación**: un Collaborator resuelve un quiz con preguntas cerradas y obtiene calificación automática inmediata; un Instructor puede calificar manualmente una pregunta abierta y el Gradebook refleja el cambio — **probado y verificado de extremo a extremo contra PostgreSQL local**.
 
 ### Fase 5 — Certificados y Notificaciones (Semanas 9-10)
 - [ ] Generación de certificados PDF según la regla de emisión definida

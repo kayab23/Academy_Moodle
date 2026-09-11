@@ -18,6 +18,7 @@ import { CourseProgressBar } from '@/components/courses/CourseProgressBar';
 import { EnrollButton } from '@/components/courses/EnrollButton';
 import { LessonCompleteToggle } from '@/components/courses/LessonCompleteToggle';
 import { EnrollStudentsModal } from '@/components/courses/EnrollStudentsModal';
+import { QuizActions } from '@/components/quizzes/QuizActions';
 
 export default async function CourseDetailPage({ params }: { params: { courseId: string } }) {
   const session = await getServerSession(authOptions);
@@ -38,7 +39,10 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
         include: {
           lessons: {
             orderBy: { position: 'asc' },
-            include: { resources: { orderBy: { createdAt: 'asc' } } },
+            include: {
+              resources: { orderBy: { createdAt: 'asc' } },
+              quizzes: { select: { id: true } },
+            },
           },
         },
       },
@@ -258,6 +262,17 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                        {lesson.type === 'QUIZ' && (
+                          <QuizActions
+                            lessonId={lesson.id}
+                            lessonTitle={lesson.title}
+                            courseId={course.id}
+                            hasQuiz={lesson.quizzes.length > 0}
+                            isEnrolled={Boolean(isEnrolled)}
+                            canManage={canManage}
+                          />
+                        )}
+
                         <LessonCompleteToggle
                           lessonId={lesson.id}
                           initialCompleted={isLessonCompleted}
