@@ -427,12 +427,15 @@ SIGE_SERVICE_TOKEN=
 - [ ] **Criterio de aceptación**: un Admin puede crear un curso completo con al menos un módulo, una lección de tipo PRESENTATION (PPTX real de prueba) y verla renderizada como PDF en el navegador. **Parcialmente verificado**: el flujo completo de subida funciona; falta confirmar la conversión PPTX→PDF real con LibreOffice instalado.
 
 ### Fase 3 — Inscripción y Progreso (Semanas 5-6)
-- [ ] Sistema de inscripciones (manual + auto-inscripción)
-- [ ] Tracking de progreso por lección
-- [ ] Barra de progreso de curso (solo lecciones `isRequired`)
-- [ ] Dashboard "Mi Aprendizaje" para colaboradores
-- [ ] Vista de manager — progreso de su equipo (misma empresa)
-- [ ] **Criterio de aceptación**: un Collaborator inscrito puede completar todas las lecciones requeridas de un curso y ver su barra de progreso llegar a 100%.
+
+**Estado (construido y probado de extremo a extremo contra Postgres real el 2026-09-11)**: Auto-inscripción de colaboradores en cursos asignados o globales (`POST /api/enrollments`), inscripción masiva por Managers/Admins (`EnrollStudentsModal.tsx` restringido a colaboradores de la misma empresa para Managers), tracking de progreso individual por lección con guardado de tiempo invertido (`POST /api/progress`), cálculo de progreso del curso (`calculateCourseProgress`) basado estrictamente en lecciones obligatorias (`isRequired: true`), auto-transición de estado de inscripción a `COMPLETED` con timestamp al alcanzar el 100%, dashboard "Mi Aprendizaje" (`/my-learning`) con filtros por estado activo/completado y barra de progreso, y panel de monitoreo de equipo (`/team`) para Managers con métricas consolidadas y aislamiento estricto multi-empresa.
+
+- [x] Sistema de inscripciones (manual + auto-inscripción) — `src/app/api/enrollments/route.ts`, `EnrollButton.tsx`, `EnrollStudentsModal.tsx`
+- [x] Tracking de progreso por lección — `src/app/api/progress/route.ts`, `LessonCompleteToggle.tsx`, persistencia en `UserProgress` con `timeSpent`
+- [x] Barra de progreso de curso (solo lecciones `isRequired`) — `src/lib/progress.ts` (`calculateCourseProgress`), `CourseProgressBar.tsx`
+- [x] Dashboard "Mi Aprendizaje" para colaboradores — `src/app/(dashboard)/my-learning/page.tsx`
+- [x] Vista de manager — progreso de su equipo (misma empresa) — `src/app/(dashboard)/team/page.tsx`, `src/app/api/team/route.ts`, `TeamProgressDashboard.tsx`
+- [x] **Criterio de aceptación**: un Collaborator inscrito puede completar todas las lecciones requeridas de un curso y ver su barra de progreso llegar a 100% y su inscripción pasa automáticamente a `COMPLETED` — **verificado con script automatizado contra Postgres local**.
 
 ### Fase 4 — Evaluaciones y Calificaciones (Semanas 7-8)
 - [ ] Creador de quizzes (UI para definir preguntas)

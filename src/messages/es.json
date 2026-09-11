@@ -35,6 +35,7 @@
     "courses": "Catálogo de Cursos",
     "categories": "Categorías",
     "myLearning": "Mi Aprendizaje",
+    "team": "Mi Equipo",
     "gradebook": "Calificaciones",
     "certificates": "Certificados",
     "users": "Usuarios",
@@ -142,5 +143,58 @@
     "resourceType": "Tipo de archivo o enlace",
     "downloadOriginal": "Descargar original",
     "previewUnavailable": "Vista previa no disponible en el navegador. Puedes descargar el archivo original."
+  },
+  "enrollment": {
+    "enroll": "Inscribirme en este curso",
+    "enrolled": "Inscrito",
+    "completed": "Completado",
+    "enrollStudents": "Inscribir colaboradores",
+    "selectStudents": "Seleccionar colaboradores",
+    "enrolling": "Inscribiendo...",
+    "unenroll": "Darse de baja",
+    "confirmUnenroll": "¿Estás seguro de que deseas darte de baja de este curso? Tu progreso no se perderá pero el curso no aparecerá como activo.",
+    "successEnroll": "Inscripción realizada con éxito",
+    "enrollStudentsTitle": "Inscribir colaboradores al curso",
+    "noAvailableStudents": "Todos los colaboradores de tu empresa ya están inscritos en este curso.",
+    "statusActive": "Activo",
+    "statusCompleted": "Completado",
+    "statusSuspended": "Suspendido"
+  },
+  "progress": {
+    "courseProgress": "Progreso del curso",
+    "markComplete": "Marcar como completada",
+    "completed": "Lección completada",
+    "requiredLessonsProgress": "{completed} de {total} lecciones requeridas",
+    "allCompleted": "¡Has completado todas las lecciones requeridas de este curso!",
+    "percentCompleted": "{percent}% completado",
+    "timeSpent": "Tiempo dedicado: {minutes} min"
+  },
+  "myLearning": {
+    "title": "Mi Aprendizaje",
+    "subtitle": "Continúa tus cursos activos y revisa tus capacitaciones completadas.",
+    "tabInProgress": "En curso ({count})",
+    "tabCompleted": "Completados ({count})",
+    "emptyInProgress": "No tienes cursos en progreso actualmente.",
+    "emptyCompleted": "Aún no has completado ningún curso.",
+    "exploreCatalog": "Explorar catálogo",
+    "continueCourse": "Continuar curso",
+    "reviewCourse": "Repasar curso",
+    "enrolledOn": "Inscrito el {date}",
+    "completedOn": "Completado el {date}"
+  },
+  "team": {
+    "title": "Progreso del Equipo",
+    "subtitle": "Seguimiento del avance en capacitaciones de los colaboradores de tu empresa.",
+    "collaborator": "Colaborador",
+    "department": "Departamento",
+    "enrolledCourses": "Cursos inscritos",
+    "progress": "Avance",
+    "status": "Estado",
+    "lastActivity": "Última actividad",
+    "allDepartments": "Todos los departamentos",
+    "allCourses": "Todos los cursos",
+    "noData": "No hay colaboradores con cursos registrados en tu empresa.",
+    "company": "Empresa",
+    "completedCourses": "Cursos completados"
   }
 }

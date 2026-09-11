@@ -35,6 +35,7 @@
     "courses": "Course Catalog",
     "categories": "Categories",
     "myLearning": "My Learning",
+    "team": "My Team",
     "gradebook": "Gradebook",
     "certificates": "Certificates",
     "users": "Users",
@@ -142,5 +143,58 @@
     "resourceType": "File or link type",
     "downloadOriginal": "Download original",
     "previewUnavailable": "Preview not available in the browser. You can download the original file."
+  },
+  "enrollment": {
+    "enroll": "Enroll in this course",
+    "enrolled": "Enrolled",
+    "completed": "Completed",
+    "enrollStudents": "Enroll team members",
+    "selectStudents": "Select team members",
+    "enrolling": "Enrolling...",
+    "unenroll": "Unenroll",
+    "confirmUnenroll": "Are you sure you want to unenroll from this course? Your progress will not be lost, but the course will no longer appear active.",
+    "successEnroll": "Successfully enrolled",
+    "enrollStudentsTitle": "Enroll team members in course",
+    "noAvailableStudents": "All members from your company are already enrolled in this course.",
+    "statusActive": "Active",
+    "statusCompleted": "Completed",
+    "statusSuspended": "Suspended"
+  },
+  "progress": {
+    "courseProgress": "Course progress",
+    "markComplete": "Mark as completed",
+    "completed": "Lesson completed",
+    "requiredLessonsProgress": "{completed} of {total} required lessons",
+    "allCompleted": "You have completed all required lessons in this course!",
+    "percentCompleted": "{percent}% completed",
+    "timeSpent": "Time spent: {minutes} min"
+  },
+  "myLearning": {
+    "title": "My Learning",
+    "subtitle": "Continue your in-progress courses and review completed training.",
+    "tabInProgress": "In Progress ({count})",
+    "tabCompleted": "Completed ({count})",
+    "emptyInProgress": "You do not have any courses in progress right now.",
+    "emptyCompleted": "You have not completed any courses yet.",
+    "exploreCatalog": "Explore catalog",
+    "continueCourse": "Continue course",
+    "reviewCourse": "Review course",
+    "enrolledOn": "Enrolled on {date}",
+    "completedOn": "Completed on {date}"
+  },
+  "team": {
+    "title": "Team Progress",
+    "subtitle": "Track training progress for members of your company.",
+    "collaborator": "Team Member",
+    "department": "Department",
+    "enrolledCourses": "Enrolled courses",
+    "progress": "Progress",
+    "status": "Status",
+    "lastActivity": "Last activity",
+    "allDepartments": "All departments",
+    "allCourses": "All courses",
+    "noData": "No team members with registered courses found in your company.",
+    "company": "Company",
+    "completedCourses": "Completed courses"
   }
 }

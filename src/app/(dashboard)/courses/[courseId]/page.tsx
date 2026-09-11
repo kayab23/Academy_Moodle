@@ -7,11 +7,17 @@ import { Layers, BookOpen, Clock, Award, ArrowLeft, Edit } from 'lucide-react';
 import { authOptions } from '@/lib/auth';
 import { requireAuth, canAccessCourse, canManageCourse } from '@/lib/scope';
 import { db } from '@/lib/db';
+import { Role, Prisma, EnrollmentStatus } from '@prisma/client';
+import { calculateCourseProgress } from '@/lib/progress';
 import { AddModuleForm } from '@/components/courses/AddModuleForm';
 import { AddLessonForm } from '@/components/courses/AddLessonForm';
 import { UploadResourceForm } from '@/components/courses/UploadResourceForm';
 import { ResourceViewer } from '@/components/courses/ResourceViewer';
 import { ModuleActions, LessonActions } from '@/components/courses/ModuleActions';
+import { CourseProgressBar } from '@/components/courses/CourseProgressBar';
+import { EnrollButton } from '@/components/courses/EnrollButton';
+import { LessonCompleteToggle } from '@/components/courses/LessonCompleteToggle';
+import { EnrollStudentsModal } from '@/components/courses/EnrollStudentsModal';
 
 export default async function CourseDetailPage({ params }: { params: { courseId: string } }) {
   const session = await getServerSession(authOptions);
@@ -49,6 +55,61 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
 
   const canManage = canManageCourse(user, course);
 
+  // Consultar inscripción y progreso del usuario
+  const [enrollment, progress] = await Promise.all([
+    db.enrollment.findUnique({
+      where: { userId_courseId: { userId: user.id, courseId: course.id } },
+    }),
+    calculateCourseProgress(user.id, course.id),
+  ]);
+
+  // Si tiene permisos de administración, buscar candidatos a inscribir
+  let candidateStudents: {
+    id: string;
+    name: string;
+    email: string;
+    position: string | null;
+    companyName: string;
+  }[] = [];
+
+  if (canManage) {
+    const candidateWhere: Prisma.UserWhereInput = {
+      isActive: true,
+      role: Role.COLLABORATOR,
+      enrollments: {
+        none: {
+          courseId: course.id,
+          status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+        },
+      },
+    };
+
+    if (user.role === Role.MANAGER) {
+      candidateWhere.companyId = user.companyId;
+    }
+
+    const foundUsers = await db.user.findMany({
+      where: candidateWhere,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        position: true,
+        company: { select: { name: true } },
+      },
+      orderBy: { name: 'asc' },
+      take: 50,
+    });
+
+    candidateStudents = foundUsers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      position: u.position,
+      companyName: u.company.name,
+    }));
+  }
+
   const statusBadgeClass =
     course.status === 'PUBLISHED'
       ? 'badge-success'
@@ -70,6 +131,8 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
       ? t('difficultyIntermediate')
       : t('difficultyBeginner');
 
+  const isEnrolled = Boolean(enrollment && enrollment.status !== 'SUSPENDED');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       {/* Cabecera del Curso */}
@@ -80,7 +143,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
             <span>{tCommon('back')}</span>
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
             <span className={`badge ${statusBadgeClass}`}>
               {statusLabel}
             </span>
@@ -90,12 +153,23 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
             {course.category && (
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{course.category.name}</span>
             )}
+
             {canManage && (
-              <Link href={`/courses/${course.id}/edit`} className="btn-primary" style={{ padding: 'var(--space-1) var(--space-3)', fontSize: 'var(--text-xs)' }}>
-                <Edit size={14} />
-                <span>{t('editCourse')}</span>
-              </Link>
+              <>
+                <EnrollStudentsModal courseId={course.id} candidateStudents={candidateStudents} />
+                <Link href={`/courses/${course.id}/edit`} className="btn-primary" style={{ padding: 'var(--space-1) var(--space-3)', fontSize: 'var(--text-xs)' }}>
+                  <Edit size={14} />
+                  <span>{t('editCourse')}</span>
+                </Link>
+              </>
             )}
+
+            <EnrollButton
+              courseId={course.id}
+              isEnrolled={isEnrolled}
+              enrollmentId={enrollment?.id}
+              status={enrollment?.status}
+            />
           </div>
         </div>
 
@@ -122,6 +196,16 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
           </span>
         </div>
       </div>
+
+      {/* Barra de progreso interactiva (si está inscrito) */}
+      {isEnrolled && (
+        <CourseProgressBar
+          percentage={progress.percentage}
+          completedRequired={progress.completedRequired}
+          totalRequired={progress.totalRequired}
+          isFullyCompleted={progress.isFullyCompleted}
+        />
+      )}
 
       {/* Módulos y Lecciones */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -158,57 +242,69 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
                 <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{tModules('noLessons')}</p>
               )}
 
-              {module.lessons.map((lesson) => (
-                <div key={lesson.id} style={{ borderLeft: '2px solid var(--border-subtle)', paddingLeft: 'var(--space-4)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                      <BookOpen size={16} style={{ color: 'var(--text-muted)' }} />
-                      <strong style={{ fontSize: 'var(--text-sm)' }}>{lesson.title}</strong>
-                      <span className="badge badge-info" style={{ fontSize: '10px' }}>{lesson.type}</span>
-                      {lesson.duration && (
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{lesson.duration} min</span>
+              {module.lessons.map((lesson) => {
+                const isLessonCompleted = progress.completedLessonIds.includes(lesson.id);
+
+                return (
+                  <div key={lesson.id} style={{ borderLeft: '2px solid var(--border-subtle)', paddingLeft: 'var(--space-4)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                        <BookOpen size={16} style={{ color: 'var(--text-muted)' }} />
+                        <strong style={{ fontSize: 'var(--text-sm)' }}>{lesson.title}</strong>
+                        <span className="badge badge-info" style={{ fontSize: '10px' }}>{lesson.type}</span>
+                        {lesson.duration && (
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{lesson.duration} min</span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                        <LessonCompleteToggle
+                          lessonId={lesson.id}
+                          initialCompleted={isLessonCompleted}
+                          isRequired={lesson.isRequired}
+                        />
+
+                        {canManage && (
+                          <LessonActions
+                            lessonId={lesson.id}
+                            initialTitle={lesson.title}
+                            initialType={lesson.type}
+                            initialContent={lesson.content}
+                            initialDuration={lesson.duration}
+                            initialIsRequired={lesson.isRequired}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {lesson.content && (
+                      <div
+                        style={{
+                          padding: 'var(--space-3)',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          borderRadius: 'var(--radius-md)',
+                          fontSize: 'var(--text-sm)',
+                          color: 'var(--text-secondary)',
+                          marginBottom: 'var(--space-2)',
+                          whiteSpace: 'pre-wrap',
+                        }}
+                      >
+                        {lesson.content}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                      {lesson.resources.length === 0 ? (
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{tLessons('noResources')}</span>
+                      ) : (
+                        lesson.resources.map((resource) => <ResourceViewer key={resource.id} resource={resource} />)
                       )}
                     </div>
 
-                    {canManage && (
-                      <LessonActions
-                        lessonId={lesson.id}
-                        initialTitle={lesson.title}
-                        initialType={lesson.type}
-                        initialContent={lesson.content}
-                        initialDuration={lesson.duration}
-                        initialIsRequired={lesson.isRequired}
-                      />
-                    )}
+                    {canManage && <UploadResourceForm lessonId={lesson.id} />}
                   </div>
-
-                  {lesson.content && (
-                    <div
-                      style={{
-                        padding: 'var(--space-3)',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: 'var(--text-sm)',
-                        color: 'var(--text-secondary)',
-                        marginBottom: 'var(--space-2)',
-                        whiteSpace: 'pre-wrap',
-                      }}
-                    >
-                      {lesson.content}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                    {lesson.resources.length === 0 ? (
-                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{tLessons('noResources')}</span>
-                    ) : (
-                      lesson.resources.map((resource) => <ResourceViewer key={resource.id} resource={resource} />)
-                    )}
-                  </div>
-
-                  {canManage && <UploadResourceForm lessonId={lesson.id} />}
-                </div>
-              ))}
+                );
+              })}
 
               {canManage && <AddLessonForm moduleId={module.id} />}
             </div>

@@ -14,6 +14,7 @@ import {
   FileSpreadsheet,
   BarChart3,
   ShieldAlert,
+  Users,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -32,6 +33,11 @@ export function Sidebar() {
   ];
 
   if (role === 'ADMIN' || role === 'MANAGER') {
+    navItems.push({
+      label: t('team'),
+      href: '/team',
+      icon: Users,
+    });
     navItems.push({
       label: t('admin'),
       href: '/admin',
