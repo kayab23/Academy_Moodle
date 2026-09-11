@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { db } from './db';
 import { logActivity } from './activity';
@@ -36,8 +37,9 @@ function resetAttempts(key: string): void {
 }
 
 const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().email().optional(),
+  password: z.string().min(8).optional(),
+  ssoToken: z.string().optional(),
 });
 
 export const authOptions: NextAuthOptions = {
@@ -49,12 +51,27 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/login',
   },
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === 'production'
+          ? '__Secure-next-auth.session-token'
+          : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        ssoToken: { label: 'SSO Token', type: 'text' },
       },
       async authorize(rawCredentials, req) {
         const parsed = credentialsSchema.safeParse(rawCredentials);
@@ -62,7 +79,59 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Flujo A: Autenticación por token de un solo uso (SSO Bridge desde SIGE)
+        if (parsed.data.ssoToken) {
+          const rawToken = parsed.data.ssoToken.trim();
+          const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+          const ssoRecord = await db.ssoToken.findUnique({
+            where: { tokenHash },
+            include: { user: { include: { company: true } } },
+          });
+
+          if (
+            !ssoRecord ||
+            ssoRecord.used ||
+            ssoRecord.expiresAt < new Date() ||
+            !ssoRecord.user.isActive ||
+            !ssoRecord.user.company.isActive
+          ) {
+            return null;
+          }
+
+          // Marcar token como consumido de inmediato (un solo uso)
+          await db.ssoToken.update({
+            where: { id: ssoRecord.id },
+            data: { used: true, usedAt: new Date() },
+          });
+
+          const user = ssoRecord.user;
+
+          await logActivity({
+            userId: user.id,
+            action: 'SSO_LOGIN',
+            entityType: 'User',
+            entityId: user.id,
+            metadata: { origin: 'SIGE_BRIDGE', email: user.email },
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            companyId: user.companyId,
+            companySlug: user.company.slug,
+            locale: user.locale,
+          };
+        }
+
+        // Flujo B: Autenticación normal por Email + Password
         const { email, password } = parsed.data;
+        if (!email || !password) {
+          return null;
+        }
+
         const normalizedEmail = email.toLowerCase().trim();
 
         // Rate limiting IP + email (SPEC.md 1.1)

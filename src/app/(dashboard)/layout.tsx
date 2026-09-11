@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 
 export default async function DashboardLayout({
   children,
@@ -42,23 +43,14 @@ export default async function DashboardLayout({
   } as React.CSSProperties;
 
   return (
-    <div style={{ ...brandStyles, display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Navbar companyName={company?.name} companySlug={company?.slug} />
-        <main
-          style={{
-            flex: 1,
-            padding: 'var(--space-8)',
-            maxWidth: '1400px',
-            width: '100%',
-            margin: '0 auto',
-          }}
-        >
-          {children}
-        </main>
-        <Footer />
-      </div>
+    <div style={{ ...brandStyles, minHeight: '100vh' }}>
+      <DashboardShell
+        sidebar={<Sidebar />}
+        navbar={<Navbar companyName={company?.name} companySlug={company?.slug} />}
+        footer={<Footer />}
+      >
+        {children}
+      </DashboardShell>
     </div>
   );
 }
