@@ -487,16 +487,48 @@ Todos los módulos corren hoy en un único servidor físico on-premise: **`SER-D
    pm2 start "next start -p 3100" --name "academy-lms"
    pm2 save
    ```
-4. **Nginx — diferencia técnica clave frente a las apps SPA existentes**: CRM, SIGE y Vitaris son SPAs que Nginx sirve como archivos estáticos (`root ... ; try_files $uri $uri/ /index.html;`) y solo el prefijo `/api/` se reenvía al backend. **Academy LMS es Next.js App Router con SSR en cada ruta**, así que el bloque de Nginx NO debe servir una carpeta estática — debe reenviar **todo** el tráfico al proceso Node:
+4. **Nginx — diferencia técnica clave frente a las apps SPA existentes**: CRM, SIGE y Vitaris son SPAs que Nginx sirve como archivos estáticos (`root ... ; try_files $uri $uri/ /index.html;`) y solo el prefijo `/api/` se reenvía al backend. **Academy LMS es Next.js App Router con SSR en cada ruta**, así que el bloque de Nginx NO debe servir una carpeta estática — debe reenviar **todo** el tráfico al proceso Node. El `nginx.conf` real de producción (revisado en `ops/nginx.conf` del repo SIGE) ya define zonas de `limit_req` compartidas (`api_general`, `api_login`, `api_upload`) y bloquea extensiones sensibles a nivel Nginx además de la app — Academy DEBE seguir el mismo estilo, no un bloque mínimo aislado:
    ```nginx
-   # Academy LMS (nuevo — puerto a confirmar, ver paso 1)
+   # Academy LMS (nuevo — puerto a confirmar, ver paso 1) — agregar dentro del bloque http{} existente
+   upstream academy_lms { server 127.0.0.1:3100; keepalive 64; }
+
    server {
-       listen 8086;
+       listen       8086;
+       server_name  192.168.1.252  SER-DESARROLLO  localhost;
+       server_tokens off;
+
+       # Bloquear archivos sensibles (mismo criterio que los demás módulos)
+       location ~ /\.                           { deny all; access_log off; }
+       location ~* \.(env|log|sql|bak|ps1|sh)$ { deny all; access_log off; }
+
+       # Assets estáticos de Next.js: cacheables de forma agresiva e inmutable
+       location /_next/static/ {
+           proxy_pass http://academy_lms;
+           proxy_set_header Host $host;
+           expires 1y;
+           add_header Cache-Control "public, immutable";
+           access_log off;
+       }
+
+       # Login: mismo rate limit estricto que los demás módulos
+       location = /api/auth/callback/credentials {
+           limit_req zone=api_login burst=5 nodelay;
+           limit_req_status 429;
+           proxy_pass http://academy_lms;
+           proxy_http_version 1.1;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+
+       # Todo lo demás (SSR, resto de rutas, resto de /api/)
        location / {
-           proxy_pass http://127.0.0.1:3100;
+           limit_req zone=api_general burst=30 nodelay;
+           proxy_pass http://academy_lms;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
+           proxy_set_header Connection "upgrade";
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -505,7 +537,7 @@ Todos los módulos corren hoy en un único servidor físico on-premise: **`SER-D
        }
    }
    ```
-   Esta entrada se **agrega** al `C:\CRM\nginx\conf\nginx.conf` existente, sin tocar los bloques `server` de las otras apps, y se recarga con `cd C:\CRM\nginx ; .\nginx.exe -s reload`.
+   Esta entrada se **agrega** al `C:\CRM\nginx\conf\nginx.conf` existente (reutilizando las zonas `limit_req_zone` que ya están declaradas una sola vez arriba del archivo), sin tocar los bloques `server` de las otras apps, y se recarga con `cd C:\CRM\nginx ; .\nginx.exe -s reload`.
 5. **Cloudflare Tunnel**: agregar un nuevo "Public Hostname" (`academy` → `http://localhost:8086`) al túnel `Corposuite-Tunnel` ya existente, en Cloudflare Zero Trust → Networks → Tunnels. Esto no requiere tocar las entradas de los otros 5 módulos ni reiniciar el túnel.
 6. **Variables de entorno de producción propias de Academy** (nunca reutilizar las de otro módulo):
    ```
@@ -516,11 +548,43 @@ Todos los módulos corren hoy en un único servidor físico on-premise: **`SER-D
 
 ### Convención de datos compartida entre módulos (sin compartir base de datos)
 
-Para que un cruce de datos futuro entre módulos sea trivial sin necesitar una migración, el identificador de empresa DEBE normalizarse igual en todos los módulos: `kezelmedica`, `vitaris`, `redbeat` (minúsculas, sin espacios ni acentos) — que es exactamente como ya está modelado `Company.slug` en el schema de Academy LMS. SIGE hoy almacena el nombre de empresa como texto libre con otro formato (`Kezelmedica`, `Vitaris`, `Red Beat`); si en el futuro se construye cualquier integración entre ambos módulos, la normalización de este campo es el primer paso, no algo que se pueda asumir ya resuelto.
+Para que un cruce de datos futuro entre módulos sea trivial sin necesitar una migración, el identificador de empresa DEBE normalizarse igual en todos los módulos: `kezelmedica`, `vitaris`, `redbeat` (minúsculas, sin espacios ni acentos) — que es exactamente como ya está modelado `Company.slug` en el schema de Academy LMS. **Verificado en el código real de SIGE** (`backend/migrate.js`, tabla `collaborator_registry`, y su índice `idx_collab_registry_empresa ON collaborator_registry(UPPER(empresa))`): SIGE guarda la empresa como texto libre en mayúsculas sin espacios (`'KEZELMEDICA' | 'VITARIS' | 'REDBEAT'`, según `ARQUITECTURA.md` del repo SIGE) — la normalización hacia el slug de Academy es entonces solo un `.toLowerCase()`, no un mapeo de nombres distintos como se había asumido antes de revisar el código.
+
+### Sincronización de colaboradores con SIGE (diseño verificado contra el código real, no construido todavía)
+
+SIGE ya es la fuente de verdad operativa de "quién trabaja aquí, en qué empresa, en qué puesto" — tiene ~250 colaboradores dados de alta vía su flujo de onboarding (`collaborator_registry` → `POST /api/collaborators`). Antes de comprometer un diseño de sincronización, se revisó el schema real (`backend/migrate.js`) y las rutas reales (`backend/routes/collaborators.js`, `backend/routes/users.js`) de SIGE para no asumir campos que no existen. Hallazgos concretos:
+
+| Dato necesario para Academy | ¿Existe en SIGE hoy? | Dónde |
+|:---|:---|:---|
+| Email único de login | Sí | `users.email` (UNIQUE) |
+| Nombre completo, rol, departamento, empresa | Sí | `profiles.full_name/role/department` + `profiles.empresa` (agregado por `ALTER TABLE`) |
+| Ficha de onboarding completa (puesto, sede, fecha de ingreso) | Sí | `collaborator_registry` |
+| **Flag de colaborador activo/inactivo (baja)** | **No existe.** Ni `users` ni `profiles` tienen columna `is_active`/`disabled`. `collaborator_registry.status` solo cubre el ciclo de **alta** (`pendiente` → `revisado` → `incorporado` → `rechazado`), no el de **baja**. | — |
+| Endpoint que exponga email+empresa+rol de todos los colaboradores activos, sin restricción a un solo campo de filtro de dashboard | Parcial. `GET /api/users` existe pero es solo-admin y no incluye `empresa`; el detalle completo (`GET /api/users/:id`) sí trae `empresa` pero es por colaborador, uno a la vez. | `backend/routes/users.js` |
+
+**Consecuencia directa para el diseño**: la parte de "cuando alguien causa baja en SIGE, Academy lo desactiva automáticamente" que propuse antes **no se puede construir tal cual hoy** — SIGE no tiene ese dato todavía. Antes de implementar la sincronización automática hay que decidir una de estas dos cosas (no lo decido yo, es una decisión de negocio/operación):
+1. Agregar una columna de baja/estado a `users`/`profiles` en SIGE primero (cambio en el otro repo, fuera del alcance de Academy), o
+2. Que la sincronización a Academy sea solo de **altas** por ahora (crear/actualizar colaboradores), y las bajas se seguyan gestionando manualmente en Academy hasta que SIGE tenga ese dato.
+
+**Patrón reutilizable encontrado y sí recomendable copiar**: SIGE ya resolvió "cómo le doy acceso a alguien sin que un admin tenga que inventarle una contraseña a mano" con una tabla `account_activation_tokens` (`registry_id`, `token_hash`, `expires_at`, `used`) — un token de un solo uso que el propio colaborador usa para activar su cuenta y poner su contraseña. Este es exactamente el patrón que Academy debería usar cuando la sincronización cree un usuario nuevo (en vez de generar una contraseña temporal como hace `POST /api/collaborators/:id/create-account` en SIGE, que es un patrón más viejo dentro del mismo repo).
+
+### Patrón de integración futura entre módulos (no implementar todavía)
 
 ### Patrón de integración futura entre módulos (no implementar todavía)
 
 El ecosistema ya tiene un patrón probado para cuando un módulo necesita un dato de otro: llamada servidor-a-servidor con **token de servicio dedicado** (no la sesión del usuario final), origen explícitamente permitido y sin depender de cookies cross-domain — es el mismo patrón que hoy usa Vitaris para exponerle datos al CRM. Un caso de uso concreto ya identificable para Academy LMS: que SIGE consulte, antes de aprobar un viático, si un colaborador tiene vigente una capacitación obligatoria (ej. "Manejo de químicos" ligado a PNO-ADM-01). Esto se resolvería el día que se decida construir con un endpoint de solo lectura tipo `GET /api/integrations/certifications?userId=...` en Academy, protegido por token de servicio — **no se construye en las fases actuales de este plan**; se deja documentado aquí para que, cuando se decida, no haya que rediseñar nada ni el agente ejecutor tenga que inventar el patrón de integración desde cero.
+
+### Patrones técnicos de SIGE reutilizables en Academy (verificados en el código real, no copiados a ciegas)
+
+Revisando el backend de SIGE se encontraron prácticas ya probadas en producción que Academy debería adoptar cuando le toque construir lo equivalente — se documentan aquí para no reinventarlas ni improvisar algo peor. Ninguna de estas está implementada todavía en Academy; quedan como recomendación para la fase que corresponda:
+
+| Patrón en SIGE | Dónde vivirá en Academy | Fase relevante |
+|:---|:---|:---|
+| **Rate limiting híbrido** (`backend/lib/hybridRateLimitStore.js`): usa Redis cuando está disponible para compartir el conteo entre workers de PM2 en modo cluster, y degrada automáticamente a memoria local si Redis no responde — nunca tumba el login. | Reemplazar el `Map` en memoria de `src/lib/auth.ts` por el mismo patrón (Redis opcional vía `REDIS_URL`, fallback a memoria) el día que Academy corra en más de una instancia/worker. Con una sola instancia PM2 no es urgente, pero si se activa modo cluster hay que resolverlo antes, no después. | Mejora técnica, no bloquea ninguna fase actual |
+| **Auto-activación de cuenta con token de un solo uso** (`account_activation_tokens`: `registry_id`, `token_hash`, `expires_at`, `used`) en vez de contraseña temporal generada por un admin. | Usar exactamente este patrón para el flujo de alta de usuario en Academy (ya sea alta manual o, más adelante, por sincronización desde SIGE): el usuario nuevo recibe un correo con link de activación de un solo uso, nunca una contraseña temporal en texto. | Fase 1 (ya se construyó auth) — ajuste recomendado antes de abrir altas reales; hoy Academy solo tiene seed de desarrollo, así que no es urgente pero sí antes de producción |
+| **Logging selectivo de accesos** (`backend/middleware/accessLogger.js`): solo registra mutaciones (POST/PUT/PATCH/DELETE) y respuestas de error (status ≥ 400), nunca cada GET — evita inflar la tabla de auditoría — y redacta explícitamente campos `password`/`confirmPassword` antes de guardar el detalle. | Aplicar el mismo criterio de selectividad y redacción en cualquier lugar de Academy que registre payloads completos en `ActivityLog` (hoy `logActivity` ya evita loguear cosas sensibles en el login; mantener ese criterio al agregar más acciones en fases futuras). | Todas las fases que agreguen nuevas llamadas a `logActivity` |
+| **Script de precheck antes de arrancar** (`backend/tests/precheck.js`, enganchado a `predev`/`prestart` en `package.json`): valida conexión a BD y variables de entorno requeridas antes de levantar el servidor, con error claro en vez de un arranque a medias. | Agregar un script equivalente en Academy (`scripts/precheck.ts` + hooks `predev`/`prebuild` en `package.json`) que valide `DATABASE_URL`, `NEXTAUTH_SECRET` y la conexión a Postgres antes de arrancar. | Fase 1 (ajuste recomendado, no implementado todavía) |
+| **Web Push (VAPID)** (`backend/routes/push.js` + `web-push`): notificaciones push del navegador además de las in-app/email. | Opcional para el módulo de Notificaciones — hoy Fase 5 de Academy solo contempla in-app + email; agregar push del navegador es una mejora disponible, no un requisito nuevo. | Fase 5 (opcional, a confirmar si se quiere) |
 
 ---
 
