@@ -8,6 +8,7 @@ Plataforma tipo Moodle diseñada para gestión de cursos, capacitaciones, presen
 
 Estas reglas son de cumplimiento obligatorio para cualquier agente que implemente este plan. Si algo en el resto del documento entra en conflicto con esta sección, esta sección tiene prioridad.
 
+0. **Leer [SPEC.md](SPEC.md) antes de escribir código**: contiene las reglas estrictas de seguridad, la arquitectura obligatoria de base de datos y los estándares de calidad (accesibilidad, rendimiento, escalabilidad). Ninguna fase se considera completa si viola una regla de SPEC.md, incluyendo su checklist de cierre de fase/PR.
 1. **Repositorio**: este directorio aún no es un repositorio git. Antes de escribir código, ejecutar `git init` y hacer commits pequeños y descriptivos por feature (no un commit único por fase completa).
 2. **Orden estricto**: no iniciar una fase sin haber cumplido el "Criterio de aceptación" de la fase anterior (ver sección "Fases de Desarrollo"). No adelantar trabajo de fases futuras aunque parezca eficiente.
 3. **Stack cerrado**: usar exactamente las tecnologías de la tabla "Stack Tecnológico". No sustituir Prisma, NextAuth, PostgreSQL ni Next.js por alternativas sin aprobación explícita del usuario.
