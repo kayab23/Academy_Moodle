@@ -1,11 +1,19 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
+import { isTrustedOrigin } from '@/lib/csrf';
 
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const isAuth = !!token;
     const pathname = req.nextUrl.pathname;
+
+    // Defensa CSRF: en producción la cookie de sesión es SameSite=None
+    // (requerida por el embed en SIGE), así que se valida el origen a mano
+    // en toda mutación (Server Actions llegan como POST a la misma ruta).
+    if (req.method !== 'GET' && req.method !== 'HEAD' && !isTrustedOrigin(req)) {
+      return NextResponse.json({ error: 'Origen no permitido.' }, { status: 403 });
+    }
 
     const isLoginPage = pathname === '/login';
 

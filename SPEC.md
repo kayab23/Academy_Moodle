@@ -69,6 +69,8 @@ DEBEN configurarse globalmente (Next.js `headers()` en `next.config.js`):
 
 **Excepción única y acotada**: para el diseño de Academy embebido como departamento dentro de SIGE (ver PLAN.md, "Diseño definitivo de integración"), `frame-ancestors` DEBE ampliarse exactamente a `'self' https://sige.corposuitekrv.com` — nunca a `*` ni a un wildcard de dominio. Cualquier origen adicional que necesite enmarcar Academy en el futuro (otro departamento del ERP) DEBE agregarse explícitamente uno por uno, nunca mediante un comodín.
 
+**Consecuencia obligatoria de esa excepción — la cookie de sesión deja de proteger contra CSRF**: para que la sesión sobreviva dentro del iframe de SIGE, la cookie de NextAuth usa `SameSite=None` en producción (`src/lib/auth.ts`) — el navegador SÍ la adjunta en peticiones cross-site, no solo dentro del iframe. Por lo tanto `SameSite` NUNCA debe tratarse como protección CSRF en este proyecto. Todo handler que mute datos (Server Action o ruta `/api`) DEBE validar el origen de la petición contra `NEXTAUTH_URL` — usar `isTrustedOrigin()` de `src/lib/csrf.ts`, ya aplicado de forma centralizada en `middleware.ts` para toda petición no-GET a una ruta protegida. Si se agrega una ruta `/api` de mutación fuera del matcher de `middleware.ts` (ver `config.matcher` ahí), DEBE llamar a `isTrustedOrigin()` explícitamente al inicio del handler.
+
 ### 1.10 Secretos y configuración
 
 - NO DEBE commitearse jamás `.env` con valores reales; solo `.env.example` con placeholders.
