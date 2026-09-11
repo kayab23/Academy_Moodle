@@ -128,6 +128,48 @@ async function main() {
     },
   });
 
+  // 5. Instructor y Gerente de prueba (pueden crear cursos y subir recursos)
+  await prisma.user.upsert({
+    where: { email: 'instructor@kezelmedica.com' },
+    update: {},
+    create: {
+      email: 'instructor@kezelmedica.com',
+      name: 'Laura Méndez (Instructora)',
+      passwordHash: testPasswordHash,
+      role: Role.INSTRUCTOR,
+      companyId: kezelmedica.id,
+      position: 'Instructora de Capacitación',
+      locale: 'es',
+      isActive: true,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'gerente@kezelmedica.com' },
+    update: {},
+    create: {
+      email: 'gerente@kezelmedica.com',
+      name: 'Roberto Salinas (Gerente)',
+      passwordHash: testPasswordHash,
+      role: Role.MANAGER,
+      companyId: kezelmedica.id,
+      position: 'Gerente de Operaciones',
+      locale: 'es',
+      isActive: true,
+    },
+  });
+
+  // 6. Categoría de curso por defecto, para que el formulario "Nuevo curso" no empiece vacío
+  await prisma.courseCategory.upsert({
+    where: { id: 'cat-seguridad' },
+    update: {},
+    create: {
+      id: 'cat-seguridad',
+      name: 'Seguridad e Higiene',
+      description: 'Cursos obligatorios de seguridad laboral',
+    },
+  });
+
   console.log(`✅ Users seeded! Admin created: ${admin.email}`);
   console.log('🌱 Seed complete.');
 }

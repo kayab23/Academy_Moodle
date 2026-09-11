@@ -412,14 +412,18 @@ SIGE_SERVICE_TOKEN=
 - [x] **Criterio de aceptación**: `npm run build` y `npm run lint` pasan sin errores; es posible crear un usuario Admin por seed, iniciar sesión, y ver un dashboard vacío protegido por `middleware.ts`.
 
 ### Fase 2 — Core de Cursos (Semanas 3-4)
-- [ ] CRUD de categorías de cursos
-- [ ] CRUD de cursos (crear, editar, publicar, archivar) con asignación a empresa(s)
-- [ ] Módulos y lecciones (estructura jerárquica)
-- [ ] Subida de archivos (PPTX, PDF, video) con validación de tipo/tamaño
-- [ ] Pipeline de conversión PPTX → PDF (LibreOffice headless) con manejo de fallo (fallback a descarga)
-- [ ] Visor de presentaciones embebido (PDF resultante)
-- [ ] Catálogo de cursos (búsqueda + filtros), respetando aislamiento por empresa
-- [ ] **Criterio de aceptación**: un Admin puede crear un curso completo con al menos un módulo, una lección de tipo PRESENTATION (PPTX real de prueba) y verla renderizada como PDF en el navegador.
+
+**Estado parcial (construido y probado de extremo a extremo contra Postgres real el 2026-09-11)**: crear curso, agregar módulos/lecciones, subir VIDEO/PPTX/PDF/IMAGE o agregar un LINK, y reproducir/visualizar el recurso — todo respetando el aislamiento multi-empresa (probado explícitamente: un colaborador de otra empresa recibe 404 en la página del curso y 403 al intentar el streaming directo del archivo). Pendiente de esta fase: editar/publicar/archivar un curso, CRUD de categorías (hoy solo se seleccionan las existentes), y búsqueda/filtros del catálogo.
+
+- [ ] CRUD de categorías de cursos (hoy: solo lectura vía seed, se seleccionan al crear un curso)
+- [ ] CRUD de cursos — **crear con asignación a empresa(s): hecho** (`POST /api/courses`); editar/publicar/archivar: pendiente
+- [x] Módulos y lecciones (estructura jerárquica) — crear módulo (`POST /api/courses/[courseId]/modules`) y lección (`POST /api/modules/[moduleId]/lessons`); editar/reordenar/eliminar: pendiente
+- [x] Subida de archivos (PPTX, PDF, video, imagen) con validación de tipo/tamaño — `POST /api/lessons/[lessonId]/resources`, ver `src/lib/uploads.ts`. Los archivos se guardan en `UPLOADS_DIR` (fuera de `/public`) y solo se sirven autenticados vía `/api/uploads/[...path]` con soporte de Range Requests (streaming de video probado con 206 Partial Content)
+- [x] Pipeline de conversión PPTX → PDF (LibreOffice headless) con manejo de fallo (fallback a descarga) — implementado en `tryConvertPptxToPdf()`; el camino de fallo (binario `soffice` no instalado) se probó explícitamente y no rompe la subida. **El camino de éxito (conversión real) no se ha probado todavía** porque este entorno de desarrollo no tiene LibreOffice instalado — verificar en un servidor con `soffice` disponible antes de confiar en la vista previa de PPTX en producción.
+- [x] Visor de presentaciones embebido (PDF resultante) — `src/components/courses/ResourceViewer.tsx`
+- [ ] Catálogo de cursos (búsqueda + filtros), respetando aislamiento por empresa — el listado y el aislamiento ya funcionan (`src/app/(dashboard)/courses/page.tsx`); falta búsqueda/filtros
+- **Pendiente conocido, no bloqueante**: al eliminar un curso/módulo/lección/recurso, Prisma hace cascade solo en la base de datos — los archivos ya subidos a `UPLOADS_DIR` quedan huérfanos en disco. No hay todavía un endpoint DELETE para cursos/recursos; cuando se construya, debe borrar también el archivo físico.
+- [ ] **Criterio de aceptación**: un Admin puede crear un curso completo con al menos un módulo, una lección de tipo PRESENTATION (PPTX real de prueba) y verla renderizada como PDF en el navegador. **Parcialmente verificado**: el flujo completo de subida funciona; falta confirmar la conversión PPTX→PDF real con LibreOffice instalado.
 
 ### Fase 3 — Inscripción y Progreso (Semanas 5-6)
 - [ ] Sistema de inscripciones (manual + auto-inscripción)

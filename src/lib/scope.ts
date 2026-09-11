@@ -73,3 +73,31 @@ export function canAccessCourse(
   if (!course.assignedCompanies || course.assignedCompanies.length === 0) return true;
   return course.assignedCompanies.some((ac) => ac.companyId === user.companyId);
 }
+
+/**
+ * Verifica si un usuario puede administrar un curso (crear módulos/lecciones,
+ * subir recursos). No es lo mismo que poder verlo (canAccessCourse):
+ * - ADMIN: cualquier curso.
+ * - INSTRUCTOR: solo los cursos donde es el instructor asignado.
+ * - MANAGER: cursos sin empresas asignadas todavía, o ya asignados a su propia empresa.
+ * - COLLABORATOR: nunca.
+ */
+export function canManageCourse(
+  user: AuthenticatedUser,
+  course: { instructorId?: string | null; assignedCompanies?: { companyId: string }[] }
+): boolean {
+  if (user.role === Role.ADMIN) return true;
+  if (user.role === Role.INSTRUCTOR) return course.instructorId === user.id;
+  if (user.role === Role.MANAGER) {
+    if (!course.assignedCompanies || course.assignedCompanies.length === 0) return true;
+    return course.assignedCompanies.some((ac) => ac.companyId === user.companyId);
+  }
+  return false;
+}
+
+/**
+ * Roles habilitados para crear/administrar contenido de cursos.
+ */
+export function canCreateCourses(user: AuthenticatedUser): boolean {
+  return user.role === Role.ADMIN || user.role === Role.MANAGER || user.role === Role.INSTRUCTOR;
+}

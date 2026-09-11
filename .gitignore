@@ -16,9 +16,11 @@
 # Production
 /build
 
-# Uploaded media and user content (SPEC.md / PLAN.md rule #8)
-/public/uploads/*
-!/public/uploads/.gitkeep
+# Uploaded media y contenido de usuario (SPEC.md / PLAN.md regla #8)
+# NUNCA bajo /public — Next.js serviría los archivos sin pasar por el
+# control de acceso multi-empresa de src/app/api/uploads/[...path]/route.ts.
+/storage/uploads/*
+!/storage/uploads/.gitkeep
 
 # Environment variables (SPEC.md rule 1.10 / PLAN.md rule #9)
 .env
