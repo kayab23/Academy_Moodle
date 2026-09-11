@@ -13,6 +13,36 @@ const ssoIssueSchema = z.object({
   role: z.string().optional(),
 });
 
+// Rate limit dedicado a esta ruta: aunque requiere el token de servicio,
+// una comparación de igualdad normal no es de tiempo constante, así que
+// limitamos intentos por IP como defensa en profundidad contra fuerza bruta.
+const issueAttempts = new Map<string, { count: number; windowStart: number }>();
+const ISSUE_MAX_ATTEMPTS = 20;
+const ISSUE_WINDOW_MS = 60 * 1000;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = issueAttempts.get(ip);
+  if (!record || now - record.windowStart > ISSUE_WINDOW_MS) {
+    issueAttempts.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  record.count += 1;
+  return record.count > ISSUE_MAX_ATTEMPTS;
+}
+
+function isValidServiceToken(authHeader: string | null, expected: string): boolean {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false;
+  const provided = Buffer.from(authHeader.slice('Bearer '.length));
+  const expectedBuf = Buffer.from(expected);
+  if (provided.length !== expectedBuf.length) {
+    // Igual costo aproximado que una comparación real, para no filtrar la longitud por tiempo.
+    crypto.timingSafeEqual(expectedBuf, expectedBuf);
+    return false;
+  }
+  return crypto.timingSafeEqual(provided, expectedBuf);
+}
+
 function mapSigeRole(rawRole?: string): Role {
   if (!rawRole) return Role.COLLABORATOR;
   const upper = rawRole.toUpperCase();
@@ -23,10 +53,15 @@ function mapSigeRole(rawRole?: string): Role {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown';
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta más tarde.' }, { status: 429 });
+  }
+
   const authHeader = req.headers.get('authorization');
   const serviceToken = process.env.SIGE_SERVICE_TOKEN;
 
-  if (!serviceToken || !authHeader || authHeader !== `Bearer ${serviceToken}`) {
+  if (!serviceToken || !isValidServiceToken(authHeader, serviceToken)) {
     return NextResponse.json(
       { error: 'No autorizado. Token de servicio no válido o no configurado.' },
       { status: 401 }

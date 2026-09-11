@@ -99,11 +99,17 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // Marcar token como consumido de inmediato (un solo uso)
-          await db.ssoToken.update({
-            where: { id: ssoRecord.id },
+          // Consumir el token de forma atómica: el `where` exige used=false,
+          // así que si dos requests llegan casi al mismo tiempo con el mismo
+          // token, solo uno de los `updateMany` afecta una fila.
+          const consumed = await db.ssoToken.updateMany({
+            where: { id: ssoRecord.id, used: false },
             data: { used: true, usedAt: new Date() },
           });
+
+          if (consumed.count === 0) {
+            return null;
+          }
 
           const user = ssoRecord.user;
 
