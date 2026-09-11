@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { authOptions } from '@/lib/auth';
-import { requireRole } from '@/lib/scope';
+import { requireRole, getCompanyScope } from '@/lib/scope';
 import { Role } from '@prisma/client';
 import { ShieldCheck, Building2, Users, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
@@ -11,18 +11,24 @@ import { db } from '@/lib/db';
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
 
+  let user;
   try {
-    requireRole(session, [Role.ADMIN, Role.MANAGER]);
+    user = requireRole(session, [Role.ADMIN, Role.MANAGER]);
   } catch {
     redirect('/dashboard');
   }
 
   const t = await getTranslations('nav');
 
+  // SPEC.md 1.2 / PLAN.md regla 4: MANAGER solo ve su propia empresa, ADMIN ve todas.
+  const companyScope = getCompanyScope(user);
+
   const [companiesCount, usersCount, departmentsCount] = await Promise.all([
-    db.company.count(),
-    db.user.count(),
-    db.department.count(),
+    db.company.count({
+      where: user.role === Role.ADMIN ? {} : { id: user.companyId },
+    }),
+    db.user.count({ where: companyScope }),
+    db.department.count({ where: companyScope }),
   ]);
 
   return (
