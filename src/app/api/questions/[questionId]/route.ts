@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { requireAuth, canManageCourse } from '@/lib/scope';
+import { isTrustedOrigin } from '@/lib/csrf';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { QuestionType, Prisma } from '@prisma/client';
@@ -20,6 +21,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { questionId: string } }
 ) {
+  if (!isTrustedOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no permitido.' }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     const user = requireAuth(session);
@@ -86,8 +91,8 @@ export async function PATCH(
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: 'Datos inválidos', details: err.errors }, { status: 400 });
     }
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[QUESTION_UPDATE_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
@@ -95,6 +100,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { questionId: string } }
 ) {
+  if (!isTrustedOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no permitido.' }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     const user = requireAuth(session);
@@ -141,7 +150,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[QUESTION_DELETE_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

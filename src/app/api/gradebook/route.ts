@@ -261,7 +261,7 @@ export async function GET(req: NextRequest) {
       pendingReviews,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[GRADEBOOK_GET_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

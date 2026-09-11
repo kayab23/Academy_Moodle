@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { requireAuth, canAccessCourse, canManageCourse } from '@/lib/scope';
+import { isTrustedOrigin } from '@/lib/csrf';
 import { db } from '@/lib/db';
 import { EnrollmentStatus } from '@prisma/client';
 import { logActivity } from '@/lib/activity';
@@ -83,8 +84,8 @@ export async function GET(
 
     return NextResponse.json(attempts);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[QUIZ_ATTEMPTS_GET_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
@@ -92,6 +93,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { quizId: string } }
 ) {
+  if (!isTrustedOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no permitido.' }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     const user = requireAuth(session);
@@ -187,7 +192,7 @@ export async function POST(
 
     return NextResponse.json(newAttempt, { status: 201 });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[QUIZ_ATTEMPT_START_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

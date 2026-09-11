@@ -48,6 +48,15 @@ export async function GET(
       return NextResponse.json({ error: 'Acceso no permitido' }, { status: 403 });
     }
 
+    // Un instructor solo puede descargar certificados de los cursos que él
+    // mismo imparte, nunca de otro instructor ni de otra empresa.
+    if (
+      user.role === Role.INSTRUCTOR &&
+      certificate.course.instructorId !== user.id
+    ) {
+      return NextResponse.json({ error: 'Acceso no permitido' }, { status: 403 });
+    }
+
     const certDir = path.join(UPLOADS_ROOT, 'certificates');
     const filePath = path.join(certDir, `${certificate.certificateNumber}.pdf`);
 
@@ -86,7 +95,7 @@ export async function GET(
 
     return response;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[CERTIFICATE_DOWNLOAD_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

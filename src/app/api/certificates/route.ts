@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     const where: {
       userId?: string;
       user?: { companyId?: string };
+      course?: { instructorId?: string };
       OR?: { title?: { contains: string; mode: 'insensitive' }; certificateNumber?: { contains: string; mode: 'insensitive' } }[];
     } = {};
 
@@ -24,6 +25,10 @@ export async function GET(req: NextRequest) {
       where.userId = user.id;
     } else if (user.role === Role.MANAGER) {
       where.user = { companyId: user.companyId };
+    } else if (user.role === Role.INSTRUCTOR) {
+      // Un instructor solo ve certificados de los cursos que él mismo imparte,
+      // nunca de otras empresas ni de cursos ajenos (PLAN.md regla 4).
+      where.course = { instructorId: user.id };
     }
 
     if (query) {
@@ -64,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(certificates);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[CERTIFICATES_GET_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { requireAuth, canManageCourse } from '@/lib/scope';
+import { isTrustedOrigin } from '@/lib/csrf';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { evaluateAttempt } from '@/lib/grading';
@@ -16,6 +17,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { answerId: string } }
 ) {
+  if (!isTrustedOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no permitido.' }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     const user = requireAuth(session);
@@ -100,7 +105,7 @@ export async function POST(
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: 'Datos inválidos', details: err.errors }, { status: 400 });
     }
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[ANSWER_GRADE_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

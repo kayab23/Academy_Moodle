@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { requireAuth } from '@/lib/scope';
+import { isTrustedOrigin } from '@/lib/csrf';
 import { getUserNotifications, markAllNotificationsAsRead } from '@/lib/notifications';
 
 export async function GET() {
@@ -12,12 +13,16 @@ export async function GET() {
     const data = await getUserNotifications(user.id);
     return NextResponse.json(data);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[NOTIFICATIONS_GET_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
+  if (!isTrustedOrigin(req)) {
+    return NextResponse.json({ error: 'Origen no permitido.' }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     const user = requireAuth(session);
@@ -32,7 +37,7 @@ export async function POST(req: NextRequest) {
     await markAllNotificationsAsRead(user.id);
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error interno del servidor';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[NOTIFICATIONS_MARK_READ_ERROR]', err);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

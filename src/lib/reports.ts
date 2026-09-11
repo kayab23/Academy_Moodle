@@ -366,11 +366,17 @@ export async function getDepartmentsReport(companyId?: string): Promise<Departme
 }
 
 /**
- * Escapa un valor individual para cumplir con RFC 4180.
+ * Escapa un valor individual para cumplir con RFC 4180 y neutraliza inyección
+ * de fórmulas CSV (OWASP): un nombre o posición con "=HYPERLINK(...)" u otro
+ * prefijo de fórmula, subido por un colaborador, no debe ejecutarse al abrir
+ * el reporte en Excel/Sheets.
  */
 function escapeCsvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
-  const str = String(value);
+  let str = String(value);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
   if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
