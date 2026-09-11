@@ -76,3 +76,14 @@ Para las reglas estrictas de seguridad, base de datos y estándares de calidad, 
 - **Aislamiento Multi-Empresa**: Todas las consultas a nivel de datos aplican alcance por `companyId` salvo para el rol `ADMIN`.
 - **Autenticación**: Proveedor Credentials con hash `bcrypt` (cost 12), rate limiting contra ataques de fuerza bruta y sesiones JWT cifradas.
 - **Protección**: `middleware.ts` resguarda las rutas privadas redirigiendo a login si no hay sesión activa.
+
+---
+
+## 🧩 Integración al Ecosistema CorpoSuite (SIGE)
+
+Academy LMS se integra como departamento embebido en el portal/ERP corporativo **SIGE** (`sige.corposuitekrv.com`):
+- **Puente SSO de un solo uso**: `POST /api/integrations/sige/sso-issue` genera un enlace temporal protegido por `SIGE_SERVICE_TOKEN` con auto-aprovisionamiento de usuario.
+- **Consumo de acceso**: `/enlace-acceso?token=...` valida y marca el token como consumido, emite la sesión NextAuth y redirige al dashboard.
+- **Modo Embebido (Iframe)**: `DashboardShell` detecta si Academy corre dentro de un iframe (`window.self !== window.top`) y oculta la barra superior y el menú lateral para una experiencia fluida sin duplicidad de interfaz.
+- **Guía para SIGE**: Consulta [SIGE_INTEGRATION.md](SIGE_INTEGRATION.md) para las instrucciones precisas a replicar en el repositorio `app_viaticos`.
+
