@@ -389,22 +389,23 @@ LIBREOFFICE_PATH=soffice
 | `npm run prisma:generate` | Genera el cliente de Prisma |
 | `npm run prisma:migrate` | Corre migraciones en desarrollo |
 | `npm run prisma:studio` | Explorador visual de datos |
+| `npm run prisma:seed` | Carga de datos iniciales (empresas, departamentos, admin) |
 
 ---
 
 ## 📐 Fases de Desarrollo
 
 ### Fase 1 — Fundación (Semanas 1-2)
-- [ ] `git init` + `.gitignore` (incluye `public/uploads/`, `.env`, `node_modules`)
-- [ ] Setup del proyecto Next.js + TypeScript
-- [ ] Configurar Prisma + PostgreSQL, crear `.env.example`
-- [ ] Crear esquema de base de datos completo, incluyendo `Company` y `CourseCompany`
-- [ ] Implementar sistema de autenticación (NextAuth, Credentials + JWT)
-- [ ] Configurar `next-intl` con `es.json`/`en.json` mínimos
-- [ ] Design system CSS (variables, componentes base) con soporte de branding por empresa
-- [ ] Layout principal (Sidebar, Navbar, Footer)
-- [ ] Página de Login
-- [ ] **Criterio de aceptación**: `npm run build` y `npm run lint` pasan sin errores; es posible crear un usuario Admin por seed, iniciar sesión, y ver un dashboard vacío protegido por `middleware.ts`.
+- [x] `git init` + `.gitignore` (incluye `public/uploads/`, `.env`, `node_modules`)
+- [x] Setup del proyecto Next.js + TypeScript
+- [x] Configurar Prisma + PostgreSQL, crear `.env.example`
+- [x] Crear esquema de base de datos completo, incluyendo `Company` y `CourseCompany`
+- [x] Implementar sistema de autenticación (NextAuth, Credentials + JWT)
+- [x] Configurar `next-intl` con `es.json`/`en.json` mínimos
+- [x] Design system CSS (variables, componentes base) con soporte de branding por empresa
+- [x] Layout principal (Sidebar, Navbar, Footer)
+- [x] Página de Login
+- [x] **Criterio de aceptación**: `npm run build` y `npm run lint` pasan sin errores; es posible crear un usuario Admin por seed, iniciar sesión, y ver un dashboard vacío protegido por `middleware.ts`.
 
 ### Fase 2 — Core de Cursos (Semanas 3-4)
 - [ ] CRUD de categorías de cursos
