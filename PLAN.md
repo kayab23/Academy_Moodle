@@ -18,6 +18,7 @@ Estas reglas son de cumplimiento obligatorio para cualquier agente que implement
 7. **No inventar alcance**: no agregar funcionalidades no listadas en este documento (ej. proveedores de login social, pagos, app móvil nativa) sin confirmarlo primero con el usuario.
 8. **Archivos subidos**: nunca commitear contenido de `public/uploads/` al repositorio; debe estar en `.gitignore` desde el primer commit.
 9. **Secrets**: nunca escribir credenciales reales en el código o en el repo. Usar `.env` (ignorado por git) y mantener `.env.example` actualizado con las variables requeridas (ver sección correspondiente).
+10. **Ecosistema CorpoSuite**: Academy LMS se integra a un ecosistema de módulos ya en producción (ver sección "🧩 Integración al Ecosistema CorpoSuite"). Nunca modificar la configuración de otro módulo (nginx.conf de otras apps, túnel Cloudflare de otras entradas, bases de datos de otros módulos) al desplegar o tocar Academy — solo agregar entradas nuevas propias. Nunca compartir base de datos con otro módulo del ecosistema.
 
 ---
 
@@ -453,6 +454,76 @@ LIBREOFFICE_PATH=soffice
 
 ---
 
+## 🧩 Integración al Ecosistema CorpoSuite (SIGE y futuros módulos)
+
+Academy LMS no es una aplicación aislada: se integra a un ecosistema de módulos empresariales ya en producción para el mismo grupo de empresas (Kezelmedica, Vitaris, Red Beat), bajo el dominio **`corposuitekrv.com`**. Esta sección documenta lo que **ya existe realmente** (investigado directamente del repositorio en producción `https://github.com/kayab23/app_viaticos.git` — SIGE/GastosMed) y da instrucciones precisas para integrar Academy LMS como un módulo nuevo, sin romper nada de lo existente.
+
+### Estado real del ecosistema (investigado, no hipotético)
+
+Todos los módulos corren hoy en un único servidor físico on-premise: **`SER-DESARROLLO`** (HP ProLiant ML30 Gen10, Windows Server 2025 Standard, IP estática `192.168.1.252`), con **un solo Nginx compartido** (`C:\CRM\nginx\`) y **un solo túnel de Cloudflare** (`Corposuite-Tunnel`) que expone cada app en su propio subdominio HTTPS sin abrir puertos al WAN.
+
+| # | Módulo | Stack real | Puerto local en `SER-DESARROLLO` | Subdominio | BD propia |
+|:---|:---|:---|:---|:---|:---|
+| 1 | **CRM de Visitas** | Nginx sirviendo SPA estática + backend propio en `:8002` | `80` | `crm.corposuitekrv.com` | Propia |
+| 2 | **SIGE / GastosMed** (viáticos) | React+Vite SPA + Express/PM2 (`gastosmed-api`) + PostgreSQL 17 | `8080` (backend interno `3001`) | `sige.corposuitekrv.com` | `app_viaticos` (PostgreSQL) |
+| 3 | **RedBeat** | Python ASGI (FastAPI/Django) vía `uvicorn` | `8000` | `redbeat.corposuitekrv.com` | Propia |
+| 4 | **Almacén Kezelmedica** | Nginx, HTTPS/HSTS propio | `8085` | `almacen.corposuitekrv.com` | Propia |
+| 5 | **Vitaris** | Python ASGI vía `uvicorn`, patrón CSRF double-submit cookie | `8001` | `vitaris.corposuitekrv.com` | Propia |
+| 6 | **Academy LMS** (este proyecto) | Next.js App Router (SSR) + PostgreSQL | *a asignar — ver abajo* | `academy.corposuitekrv.com` (propuesto, confirmar con el usuario) | `academy_lms` (ya definida en este repo) |
+| 7 | *(futuro)* | — | — | `<app7>.corposuitekrv.com` | — |
+
+**Principio arquitectónico ya validado en producción y que Academy LMS DEBE seguir**: el ecosistema es una **integración federada de aplicaciones independientes**, no un monolito ni un esquema de base de datos compartido. Cada módulo:
+- Tiene su propio stack tecnológico (no todos son Next.js/Node — hay Python ASGI, Express, Nginx puro), su propio proceso, y **su propia base de datos**. SIGE, por ejemplo, no comparte tablas con CRM ni con Vitaris.
+- Se integra con el resto **solo a dos niveles**: (a) infraestructura compartida (mismo servidor físico, mismo Nginx, mismo túnel/dominio Cloudflare — así el usuario final percibe una "suite" coherente vía subdominios memorables), y (b) llamadas puntuales servidor-a-servidor cuando un módulo necesita un dato de otro (patrón ya usado entre Vitaris y CRM: token de servicio dedicado, origen explícitamente permitido, `credentials: false` — nunca sesión de usuario compartida entre subdominios).
+- NO existe hoy SSO/login único entre módulos. Cada app tiene su propio sistema de autenticación independiente (SIGE usa JWT propio con tabla `users` propia). Academy LMS sigue el mismo patrón: su propio NextAuth, su propia tabla `User`, sin intentar compartir sesión con SIGE u otros módulos en esta fase.
+
+### Pasos precisos para desplegar Academy LMS como módulo #6
+
+1. **Confirmar puerto local libre real con el administrador del servidor** antes de fijar uno — no asumir un número. Como referencia, los puertos ya ocupados son `80, 8080, 8000, 8085, 8001`; un candidato razonable a proponer es `8086`, pero DEBE verificarse en `SER-DESARROLLO` antes de reservarlo en Nginx/Cloudflare.
+2. **Carpeta en servidor**: `C:\AcademyLMS\app\`, replicando el patrón ya usado por SIGE (`C:\GastosMed\app\`).
+3. **Proceso**: PM2 con nombre de proceso único `academy-lms`, ejecutando `next start -p <PUERTO_INTERNO>` (ej. `3100`, un puerto interno distinto del puerto público de Nginx — igual que SIGE corre su backend interno en `3001` mientras Nginx publica `8080`).
+   ```powershell
+   cd C:\AcademyLMS\app
+   pm2 start "next start -p 3100" --name "academy-lms"
+   pm2 save
+   ```
+4. **Nginx — diferencia técnica clave frente a las apps SPA existentes**: CRM, SIGE y Vitaris son SPAs que Nginx sirve como archivos estáticos (`root ... ; try_files $uri $uri/ /index.html;`) y solo el prefijo `/api/` se reenvía al backend. **Academy LMS es Next.js App Router con SSR en cada ruta**, así que el bloque de Nginx NO debe servir una carpeta estática — debe reenviar **todo** el tráfico al proceso Node:
+   ```nginx
+   # Academy LMS (nuevo — puerto a confirmar, ver paso 1)
+   server {
+       listen 8086;
+       location / {
+           proxy_pass http://127.0.0.1:3100;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+   Esta entrada se **agrega** al `C:\CRM\nginx\conf\nginx.conf` existente, sin tocar los bloques `server` de las otras apps, y se recarga con `cd C:\CRM\nginx ; .\nginx.exe -s reload`.
+5. **Cloudflare Tunnel**: agregar un nuevo "Public Hostname" (`academy` → `http://localhost:8086`) al túnel `Corposuite-Tunnel` ya existente, en Cloudflare Zero Trust → Networks → Tunnels. Esto no requiere tocar las entradas de los otros 5 módulos ni reiniciar el túnel.
+6. **Variables de entorno de producción propias de Academy** (nunca reutilizar las de otro módulo):
+   ```
+   NEXTAUTH_URL=https://academy.corposuitekrv.com
+   DATABASE_URL=postgresql://<usuario_propio>:<password>@localhost:5432/academy_lms
+   ```
+7. **Base de datos**: usar la misma instancia de PostgreSQL 17 ya instalada en `SER-DESARROLLO` (confirmar versión coincide con la que el equipo instale para Academy), pero con una base de datos propia `academy_lms` — nunca tablas ni esquema compartido con `app_viaticos` ni con ningún otro módulo.
+
+### Convención de datos compartida entre módulos (sin compartir base de datos)
+
+Para que un cruce de datos futuro entre módulos sea trivial sin necesitar una migración, el identificador de empresa DEBE normalizarse igual en todos los módulos: `kezelmedica`, `vitaris`, `redbeat` (minúsculas, sin espacios ni acentos) — que es exactamente como ya está modelado `Company.slug` en el schema de Academy LMS. SIGE hoy almacena el nombre de empresa como texto libre con otro formato (`Kezelmedica`, `Vitaris`, `Red Beat`); si en el futuro se construye cualquier integración entre ambos módulos, la normalización de este campo es el primer paso, no algo que se pueda asumir ya resuelto.
+
+### Patrón de integración futura entre módulos (no implementar todavía)
+
+El ecosistema ya tiene un patrón probado para cuando un módulo necesita un dato de otro: llamada servidor-a-servidor con **token de servicio dedicado** (no la sesión del usuario final), origen explícitamente permitido y sin depender de cookies cross-domain — es el mismo patrón que hoy usa Vitaris para exponerle datos al CRM. Un caso de uso concreto ya identificable para Academy LMS: que SIGE consulte, antes de aprobar un viático, si un colaborador tiene vigente una capacitación obligatoria (ej. "Manejo de químicos" ligado a PNO-ADM-01). Esto se resolvería el día que se decida construir con un endpoint de solo lectura tipo `GET /api/integrations/certifications?userId=...` en Academy, protegido por token de servicio — **no se construye en las fases actuales de este plan**; se deja documentado aquí para que, cuando se decida, no haya que rediseñar nada ni el agente ejecutor tenga que inventar el patrón de integración desde cero.
+
+---
+
 ## ✅ Verificación
 
 ### Tests Automatizados
@@ -484,3 +555,4 @@ LIBREOFFICE_PATH=soffice
 | **Idioma** | Bilingüe (Español / Inglés) con sistema i18n (`next-intl`) |
 | **Branding** | Colores de Kezelmedica/Vitaris (se configurarán después, paleta premium por defecto), modelados en la tabla `Company` |
 | **Multi-empresa** | 3 empresas: Kezelmedica, Red Beat, Vitaris — una sola instancia con aislamiento lógico por `companyId` |
+| **Ecosistema** | Academy LMS es el módulo #6 de la suite CorpoSuite (`corposuitekrv.com`), que ya incluye CRM, SIGE/GastosMed, RedBeat, Almacén y Vitaris en producción sobre el mismo servidor (`SER-DESARROLLO`). Integración federada (infra compartida, BD y stack independientes por módulo) — ver sección "🧩 Integración al Ecosistema CorpoSuite" |

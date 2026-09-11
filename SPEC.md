@@ -78,7 +78,14 @@ DEBEN configurarse globalmente (Next.js `headers()` en `next.config.js`):
 - Toda acción sensible (login, cambio de rol, cambio de calificación manual, eliminación de curso/usuario, emisión de certificado) DEBE registrarse en la tabla `ActivityLog` con `userId`, `action`, `entityType`, `entityId`, `metadata`, `createdAt`.
 - Los logs de auditoría NO DEBEN ser editables ni eliminables desde la aplicación (solo lectura para Admin).
 
-### 1.12 Dependencias y manejo de errores
+### 1.12 Integración con otros módulos del ecosistema (CorpoSuite)
+
+- Academy LMS NO DEBE compartir base de datos con ningún otro módulo del ecosistema (SIGE, CRM, RedBeat, Almacén, Vitaris) — cada módulo es dueño exclusivo de sus propios datos.
+- NO DEBE aceptarse una sesión/cookie de otro módulo como prueba de autenticación en Academy — cada módulo mantiene su propio login.
+- Si en el futuro se construye una integración servidor-a-servidor con otro módulo (ver PLAN.md, sección "Integración al Ecosistema CorpoSuite"), DEBE usarse un token de servicio dedicado (no un token de sesión de usuario), con origen explícitamente permitido (whitelist), y sin depender de cookies cross-domain — siguiendo el patrón ya validado en producción entre Vitaris y CRM.
+- Cualquier endpoint expuesto para consumo de otro módulo DEBE ser de solo lectura salvo que se justifique explícitamente lo contrario, y DEBE registrarse en `ActivityLog` como cualquier otra acción sensible.
+
+### 1.13 Dependencias y manejo de errores
 
 - DEBE correrse `npm audit` (o equivalente) periódicamente; NO DEBE introducirse una dependencia nueva con vulnerabilidades críticas/altas conocidas sin justificación documentada.
 - El `package-lock.json` DEBE commitearse para builds reproducibles.
