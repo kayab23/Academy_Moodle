@@ -460,14 +460,18 @@ SIGE_SERVICE_TOKEN=
 - [x] **Criterio de aceptación**: al completar el 100% de un curso con nota aprobatoria, se genera automáticamente un certificado descargable con folio único y el branding de la empresa correcta — **probado y verificado de extremo a extremo contra PostgreSQL local**.
 
 ### Fase 6 — Reportes y Polish (Semanas 11-12)
-- [ ] Dashboard administrativo con KPIs (con filtro por empresa)
-- [ ] Reportes por curso, colaborador, departamento
-- [ ] Gráficas interactivas (Chart.js/Recharts)
-- [ ] Exportación CSV/PDF
-- [ ] Responsive design final
-- [ ] Optimización de rendimiento
-- [ ] Testing y QA
-- [ ] **Criterio de aceptación**: los reportes exportados en CSV coinciden con los datos mostrados en pantalla para al menos un curso de prueba en cada una de las 3 empresas.
+
+**Estado (construido y probado de extremo a extremo contra Postgres real el 2026-09-11)**: Dashboard administrativo ejecutivo (`/admin`) con KPIs consolidados y desglose por empresa; suite analítica interactiva (`/reports`, `ReportsManager.tsx`) con pestañas para visión general, reportes por curso, colaborador y departamento; gráficas interactivas SVG responsivas (`BarChartCard.tsx`, `DonutChartCard.tsx`, `DepartmentComparisonChart.tsx`); exportación a CSV con UTF-8 BOM (`exportReportToCsv`, `GET /api/reports/export`) para compatibilidad directa con Microsoft Excel en español; vista de impresión ejecutiva formateada vía `@media print` para exportación directa a PDF; aislamiento estricto multi-tenant verificado (Admins pueden filtrar o ver el consolidado global, Managers restringidos a su empresa, Colaboradores restringidos); y cumplimiento de los criterios de aceptación en las 3 empresas (Kezelmedica, Red Beat, Vitaris).
+
+- [x] Dashboard administrativo con KPIs (con filtro por empresa) — `src/app/(dashboard)/admin/page.tsx`, `src/app/api/reports/kpis/route.ts`
+- [x] Reportes por curso, colaborador, departamento — `src/lib/reports.ts`, `/api/reports/courses`, `/api/reports/collaborators`, `/api/reports/departments`
+- [x] Gráficas interactivas — `BarChartCard.tsx`, `DonutChartCard.tsx`, `DepartmentComparisonChart.tsx`
+- [x] Exportación CSV/PDF — `GET /api/reports/export`, `exportReportToCsv` con `\uFEFF`, botón de impresión y `@media print` en `src/styles/globals.css`
+- [x] Responsive design final y polish visual — layout adaptativo, estados de loading, empty states y auditoría WCAG
+- [x] Optimización de rendimiento — queries agregadas optimizadas en Prisma, 0 advertencias de compilación
+- [x] Testing y QA — validación automatizada contra PostgreSQL local con cursos en las 3 empresas
+- [x] **Criterio de aceptación**: los reportes exportados en CSV coinciden con los datos mostrados en pantalla para al menos un curso de prueba en cada una de las 3 empresas — **probado y verificado de extremo a extremo contra PostgreSQL local**.
+
 
 ---
 

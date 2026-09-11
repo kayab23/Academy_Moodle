@@ -1,16 +1,49 @@
 import React from 'react';
-import { getTranslations } from 'next-intl/server';
-import { BarChart3 } from 'lucide-react';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { authOptions } from '@/lib/auth';
+import { requireRole } from '@/lib/scope';
+import { Role } from '@prisma/client';
+import {
+  getAdminKpis,
+  getCoursesReport,
+  getCollaboratorsReport,
+  getDepartmentsReport,
+} from '@/lib/reports';
+import { ReportsManager } from '@/components/reports/ReportsManager';
 
 export default async function ReportsPage() {
-  const t = await getTranslations('nav');
+  const session = await getServerSession(authOptions);
+
+  let user;
+  try {
+    user = requireRole(session, [Role.ADMIN, Role.MANAGER]);
+  } catch {
+    redirect('/dashboard');
+  }
+
+  // Si es ADMIN, por defecto carga el consolidado global (undefined).
+  // Si es MANAGER, se restringe a su empresa.
+  const targetCompanyId = user.role === Role.ADMIN ? undefined : user.companyId;
+
+  const [initialKpis, initialCourses, initialCollaborators, initialDepartments] =
+    await Promise.all([
+      getAdminKpis(targetCompanyId),
+      getCoursesReport(targetCompanyId),
+      getCollaboratorsReport(targetCompanyId),
+      getDepartmentsReport(targetCompanyId),
+    ]);
+
   return (
-    <div className="glass-panel" style={{ padding: 'var(--space-8)' }}>
-      <h1 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-4)' }}>{t('reports')}</h1>
-      <div style={{ textAlign: 'center', padding: 'var(--space-12) 0', color: 'var(--text-secondary)' }}>
-        <BarChart3 size={48} style={{ margin: '0 auto var(--space-4)', color: 'var(--brand-primary)' }} />
-        <p>Reportes y métricas de avance en preparación para Fase 6.</p>
-      </div>
-    </div>
+    <ReportsManager
+      initialKpis={initialKpis}
+      initialCourses={initialCourses}
+      initialCollaborators={initialCollaborators}
+      initialDepartments={initialDepartments}
+      userRole={user.role}
+      userCompanyId={user.companyId}
+      companies={initialKpis.companies}
+      locale={user.locale || 'es'}
+    />
   );
 }

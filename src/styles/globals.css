@@ -253,3 +253,79 @@ button, input, select, textarea {
   border-radius: var(--radius-sm);
   animation: skeleton-pulse 1.5s infinite ease-in-out;
 }
+
+/* Responsive Table utilities */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Print Optimization (Fase 6 SPEC.md 3.5 & PLAN.md) */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+  }
+
+  /* Hide navigation, sidebar, and interactive action controls */
+  aside,
+  nav,
+  header,
+  .no-print,
+  button,
+  .btn-primary,
+  .btn-secondary {
+    display: none !important;
+  }
+
+  /* Show executive print header */
+  .print-header {
+    display: block !important;
+    margin-bottom: 16pt !important;
+  }
+
+  /* Ensure content spans full width without layout offsets */
+  main,
+  div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .glass-panel {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Optimize print tables */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+  }
+
+  th, td {
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+    padding: 4pt 6pt !important;
+  }
+
+  th {
+    background-color: #f3f4f6 !important;
+    font-weight: 700 !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+  }
+}
+
