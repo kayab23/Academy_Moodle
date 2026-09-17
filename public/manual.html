@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Usuario y Capacitación — Academy LMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-base: #090d16;
+      --bg-surface: #111827;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --kezel-blue: #0284c7;
+      --kezel-cyan: #06b6d4;
+      --redbeat-rose: #e11d48;
+      --redbeat-pink: #f43f5e;
+      --vitaris-emerald: #059669;
+      --vitaris-teal: #10b981;
+      
+      --accent-indigo: #6366f1;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      
+      --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+      --grad-kezel: linear-gradient(135deg, #0284c7, #0d9488);
+      --grad-redbeat: linear-gradient(135deg, #e11d48, #f43f5e);
+      --grad-vitaris: linear-gradient(135deg, #059669, #10b981);
+      
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+      --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.25);
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.06) 0%, transparent 40%),
+                  var(--bg-base);
+      background-attachment: fixed;
+    }
+
+    /* Top Banner Header */
+    .top-header {
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--grad-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: white;
+    }
+
+    .brand-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: white;
+    }
+
+    .brand-text span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.45rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--grad-primary);
+      border: none;
+      color: white;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      background: var(--grad-primary);
+    }
+
+    /* Layout with Sidebar & Content */
+    .app-container {
+      display: flex;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem;
+      gap: 2.5rem;
+    }
+
+    /* Sticky Sidebar TOC */
+    .sidebar {
+      width: 290px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 5rem;
+      height: calc(100vh - 6.5rem);
+      overflow-y: auto;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-subtle) transparent;
+    }
+
+    .sidebar h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.85rem;
+      padding-left: 0.5rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .toc-item a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.84rem;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      line-height: 1.3;
+    }
+
+    .toc-item a:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+      padding-left: 0.9rem;
+    }
+
+    .toc-item.sub-item a {
+      font-size: 0.78rem;
+      padding-left: 1.75rem;
+      color: var(--text-dim);
+    }
+
+    .toc-item.sub-item a:hover {
+      color: var(--text-main);
+      padding-left: 1.95rem;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(17, 24, 39, 0.9) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2.75rem;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 3rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .company-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .pill-kezel {
+      background: rgba(2, 132, 199, 0.15);
+      border: 1px solid rgba(2, 132, 199, 0.4);
+      color: #38bdf8;
+    }
+
+    .pill-redbeat {
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.4);
+      color: #fb7185;
+    }
+
+    .pill-vitaris {
+      background: rgba(5, 150, 105, 0.15);
+      border: 1px solid rgba(5, 150, 105, 0.4);
+      color: #34d399;
+    }
+
+    .hero-banner h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.9rem;
+      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-banner p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    /* Section Headings */
+    .section-block {
+      margin-bottom: 3.5rem;
+      scroll-margin-top: 5.5rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #818cf8;
+    }
+
+    .section-header h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: white;
+    }
+
+    h3.sub-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 2rem 0 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    /* Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin: 1.25rem 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin: 1.25rem 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      transition: all 0.25s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header-icon {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .card-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-green { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .badge-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-rose { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    .card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.4rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Step-by-Step Flow Cards */
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+      transition: border-color 0.2s ease;
+    }
+
+    .step-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--grad-primary);
+      color: white;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .step-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .step-body {
+      padding-left: 3.25rem;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    .step-body ul, .step-body ol {
+      margin-top: 0.6rem;
+      margin-bottom: 0.6rem;
+      padding-left: 1.25rem;
+    }
+
+    .step-body li {
+      margin-bottom: 0.45rem;
+    }
+
+    /* Callout Boxes */
+    .callout {
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      display: flex;
+      gap: 0.85rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .callout-info {
+      background: rgba(2, 132, 199, 0.1);
+      border-left: 4px solid var(--kezel-blue);
+      color: #bae6fd;
+    }
+
+    .callout-tip {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 4px solid var(--vitaris-teal);
+      color: #a7f3d0;
+    }
+
+    .callout-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 4px solid var(--accent-amber);
+      color: #fde68a;
+    }
+
+    .callout svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Interactive Table */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin: 1.5rem 0;
+      background: var(--bg-card);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-main);
+      padding: 0.9rem 1.2rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-subtle);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    td {
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+
+    /* FAQ Accordions */
+    .faq-item {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.75rem;
+      background: var(--bg-card);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .faq-trigger {
+      width: 100%;
+      padding: 1.1rem 1.35rem;
+      background: none;
+      border: none;
+      color: white;
+      text-align: left;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .faq-trigger:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .faq-trigger svg {
+      transition: transform 0.25s ease;
+      color: var(--text-dim);
+    }
+
+    .faq-content {
+      padding: 0 1.35rem 1.25rem 1.35rem;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      display: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .faq-item.active {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .faq-item.active .faq-trigger svg {
+      transform: rotate(180deg);
+      color: #818cf8;
+    }
+
+    .faq-item.active .faq-content {
+      display: block;
+    }
+
+    /* Keycaps & Code Tags */
+    code, .key-tag {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82em;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      color: #e2e8f0;
+    }
+
+    /* Print Specific Rules */
+    @media print {
+      body {
+        background: white !important;
+        color: #1e293b !important;
+      }
+      .top-header, .sidebar, .btn-action, .faq-trigger svg {
+        display: none !important;
+      }
+      .app-container {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+      }
+      .hero-banner {
+        background: none !important;
+        border: 2px solid #0f172a !important;
+        box-shadow: none !important;
+        padding: 1.5rem !important;
+      }
+      .hero-banner h1 {
+        color: #0f172a !important;
+        -webkit-text-fill-color: initial !important;
+      }
+      .card, .step-card, .table-container, .faq-item {
+        background: white !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        color: #1e293b !important;
+        break-inside: avoid;
+      }
+      .faq-content {
+        display: block !important;
+      }
+      h2, h3, h4, .step-title {
+        color: #0f172a !important;
+      }
+      p, li, td {
+        color: #334155 !important;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-container {
+        flex-direction: column;
+        padding: 1rem;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+      }
+      .step-body {
+        padding-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Global Header -->
+  <header class="top-header">
+    <div class="brand-group">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>Academy LMS</h1>
+        <span>Manual de Usuario &middot; CorpoSuite</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn-action" onclick="window.print()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Imprimir / Guardar PDF
+      </button>
+      <a href="#seccion-colaborador" class="btn-action btn-primary">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Empezar Capacitación
+      </a>
+    </div>
+  </header>
+
+  <div class="app-container">
+    
+    <!-- Navigation Sidebar -->
+    <aside class="sidebar">
+      <h3>Contenido del Manual</h3>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#vision-general">1. Visión General</a></li>
+        <li class="toc-item"><a href="#roles-permisos">2. Roles y Permisos</a></li>
+        <li class="toc-item"><a href="#formas-acceso">3. Formas de Acceso</a></li>
+        <li class="toc-item"><a href="#seccion-instructores">4. Gestión de Cursos</a></li>
+        <li class="toc-item sub-item"><a href="#crear-curso">&bull; 4.1 Crear Nuevo Curso</a></li>
+        <li class="toc-item sub-item"><a href="#modulos-lecciones">&bull; 4.2 Módulos y Lecciones</a></li>
+        <li class="toc-item sub-item"><a href="#subir-recursos">&bull; 4.3 Subir Videos y PDFs</a></li>
+        <li class="toc-item sub-item"><a href="#disenar-examenes">&bull; 4.4 Diseñar Exámenes</a></li>
+        <li class="toc-item sub-item"><a href="#calificar-abiertas">&bull; 4.5 Calificación Manual</a></li>
+        <li class="toc-item sub-item"><a href="#gradebook">&bull; 4.6 Gradebook</a></li>
+        <li class="toc-item"><a href="#seccion-colaborador">5. Guía del Colaborador</a></li>
+        <li class="toc-item sub-item"><a href="#inscribirse">&bull; 5.1 Catálogo e Inscripción</a></li>
+        <li class="toc-item sub-item"><a href="#cursar-lecciones">&bull; 5.2 Estudiar Lecciones</a></li>
+        <li class="toc-item sub-item"><a href="#responder-quizzes">&bull; 5.3 Presentar Exámenes</a></li>
+        <li class="toc-item sub-item"><a href="#descargar-certificado">&bull; 5.4 Descarga de Diplomas</a></li>
+        <li class="toc-item"><a href="#seccion-gerentes">6. Supervisión y Reportes</a></li>
+        <li class="toc-item"><a href="#faq">7. Preguntas Frecuentes</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Hero Presentation -->
+      <section class="hero-banner">
+        <div class="hero-badge-group">
+          <span class="company-pill pill-kezel">
+            <span style="width:8px;height:8px;border-radius:50%;background:#0284c7;"></span>
+            Kezelmedica
+          </span>
+          <span class="company-pill pill-redbeat">
+            <span style="width:8px;height:8px;border-radius:50%;background:#e11d48;"></span>
+            Red Beat
+          </span>
+          <span class="company-pill pill-vitaris">
+            <span style="width:8px;height:8px;border-radius:50%;background:#059669;"></span>
+            Vitaris
+          </span>
+        </div>
+        <h1>Manual Integral de Capacitación &middot; Academy LMS</h1>
+        <p>Guía de uso para colaboradores, instructores y líderes de equipo. Conoce paso a paso cómo estudiar, presentar evaluaciones, cargar materiales multimedia y expedir certificaciones oficiales del grupo.</p>
+      </section>
+
+      <!-- 1. Visión General -->
+      <section id="vision-general" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h2>1. Visión General y Propósito</h2>
+        </div>
+
+        <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.5rem;">
+          <strong>Academy LMS</strong> es la plataforma corporativa del consorcio empresarial orientada a garantizar la excelencia operativa, el cumplimiento normativo (ISO, COFEPRIS) y la capacitación continua de todo el personal en un entorno moderno, ágil y seguro.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-header-icon">
+              <span class="card-badge badge-blue">Aislamiento</span>
+            </div>
+            <h4>Multi-Empresa Real</h4>
+            <p>Datos, colaboradores y cursos confidenciales estrictamente segmentados entre Kezelmedica, Red Beat y Vitaris, con paletas corporativas personalizadas.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header-icon">
+              <span class="card-badge badge-purple">Multimedia</span>
+            </div>
+            <h4>Streaming Inteligente</h4>
+            <p>Reproducción de video fluida mediante HTTP 206 Range Requests y visor embebido para presentaciones PPTX y manuales PDF sin software externo.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header-icon">
+              <span class="card-badge badge-green">Validez</span>
+            </div>
+            <h4>Folio Único Oficial</h4>
+            <p>Generación automática de diplomas vectoriales en alta resolución con código auditable global e intransferible emitido al acreditar con éxito.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Roles y Permisos -->
+      <section id="roles-permisos" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </div>
+          <h2>2. Roles y Permisos en la Plataforma</h2>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Rol</th>
+                <th>Destinatarios</th>
+                <th>Capacidades y Alcance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="card-badge badge-blue">COLLABORATOR</span></td>
+                <td><strong>Colaborador General</strong></td>
+                <td>Inscripción en cursos, reproducción de videos y lectura de diapositivas, resolución de exámenes, tracking personal en <code>/my-learning</code> y descarga de certificados.</td>
+              </tr>
+              <tr>
+                <td><span class="card-badge badge-purple">INSTRUCTOR</span></td>
+                <td><strong>Capacitadores y Especialistas</strong></td>
+                <td>Crear cursos, módulos y lecciones, subir videos/presentaciones, diseñar quizzes, calificar respuestas abiertas y gestionar el Gradebook de <em>sus propios cursos</em>.</td>
+              </tr>
+              <tr>
+                <td><span class="card-badge badge-amber">MANAGER</span></td>
+                <td><strong>Gerentes y Jefes de Área</strong></td>
+                <td>Monitorear el avance del departamento en <code>/team</code>, inscribir por lote a colaboradores de su empresa, visualizar calificaciones y exportar reportes.</td>
+              </tr>
+              <tr>
+                <td><span class="card-badge badge-rose">ADMIN</span></td>
+                <td><strong>Dirección y Administradores</strong></td>
+                <td>Acceso global sin restricciones: gestión de las 3 empresas, cursos globales, categorías, auditoría completa (<code>ActivityLog</code>) y KPIs ejecutivos.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. Formas de Acceso -->
+      <section id="formas-acceso" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+          </div>
+          <h2>3. Formas de Acceso al Sistema</h2>
+        </div>
+
+        <div class="grid-2">
+          <div class="card" style="border-left: 4px solid var(--accent-indigo);">
+            <h4>Opción A: Desde el Portal SIGE (Recomendado)</h4>
+            <p style="margin-bottom: 0.75rem;">Para colaboradores ya autenticados en el ERP corporativo:</p>
+            <ol style="padding-left: 1.25rem; font-size: 0.88rem; color: var(--text-muted);">
+              <li>Ingrese al portal <code>sige.corposuitekrv.com</code>.</li>
+              <li>En el menú principal, pulse en <strong>"Capacitación"</strong>.</li>
+              <li>Academy LMS se desplegará dentro del sistema sin solicitar credenciales (SSO de 1 solo clic).</li>
+            </ol>
+          </div>
+
+          <div class="card" style="border-left: 4px solid var(--kezel-blue);">
+            <h4>Opción B: Acceso Directo con Credenciales</h4>
+            <p style="margin-bottom: 0.75rem;">Para ingreso desde fuera del portal o personal técnico:</p>
+            <ol style="padding-left: 1.25rem; font-size: 0.88rem; color: var(--text-muted);">
+              <li>Abra en su navegador <code>academy.corposuitekrv.com/login</code>.</li>
+              <li>Escriba su correo corporativo y contraseña.</li>
+              <li>Haga clic en <strong>"Iniciar Sesión"</strong> para ingresar al dashboard.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Guía para Administradores e Instructores -->
+      <section id="seccion-instructores" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <h2>4. Guía para Creadores: Carga y Gestión de Cursos</h2>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+          Siga esta secuencia estructurada para dar de alta capacitaciones oficiales, subir recursos audiovisuales y configurar evaluaciones automáticas.
+        </p>
+
+        <!-- 4.1 Crear Curso -->
+        <div id="crear-curso" class="step-card">
+          <div class="step-header">
+            <div class="step-number">1</div>
+            <div class="step-title">Crear la Ficha del Curso</div>
+          </div>
+          <div class="step-body">
+            <p>Vaya a <strong>Cursos</strong> &rarr; botón <strong>"+ Nuevo Curso"</strong> (ruta <code>/courses/new</code>):</p>
+            <ul>
+              <li><strong>Título y Descripción:</strong> Especifique el objetivo de aprendizaje con claridad.</li>
+              <li><strong>Categoría:</strong> Asigne a <em>Seguridad e Higiene</em>, <em>Operaciones</em> o <em>Tecnología</em>.</li>
+              <li><strong>Dificultad &amp; Horas:</strong> Defina el nivel y las horas estimadas (ej. <code>3.5</code> hrs).</li>
+              <li><strong>Nota Mínima Aprobatoria:</strong> Calificación sobre 100 requerida para obtener diploma (por defecto <code>80.0</code>).</li>
+              <li><strong>Asignación de Empresas:</strong> Seleccione Kezelmedica, Red Beat o Vitaris. <em>Si no marca ninguna, el curso será Global para todo el grupo.</em></li>
+            </ul>
+            <div class="callout callout-info">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+              <div>El curso nace en estado <strong>Borrador (DRAFT)</strong>. Ningún alumno lo verá en su catálogo hasta que usted decida publicarlo oficialmente.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4.2 Módulos y Lecciones -->
+        <div id="modulos-lecciones" class="step-card">
+          <div class="step-header">
+            <div class="step-number">2</div>
+            <div class="step-title">Estructurar Módulos y Lecciones</div>
+          </div>
+          <div class="step-body">
+            <p>Dentro del curso recién creado, configure la ruta pedagógica:</p>
+            <ul>
+              <li><strong>Módulos:</strong> Representan los capítulos temáticos (ej. <em>Módulo 1: Procedimiento Operativo PNO-04</em>).</li>
+              <li><strong>Lecciones:</strong> Cada módulo contiene lecciones con tipos específicos:
+                <ul>
+                  <li><code>VIDEO</code>: Capacitaciones audiovisuales explicativas.</li>
+                  <li><code>PRESENTATION</code>: Diapositivas PPTX.</li>
+                  <li><code>DOCUMENT</code>: Manuales o normativas PDF.</li>
+                  <li><code>TEXT</code>: Contenido teórico redactado directamente en la plataforma.</li>
+                  <li><code>QUIZ</code>: Examen o prueba de validación de conocimientos.</li>
+                </ul>
+              </li>
+              <li><strong>¿Es Obligatoria? (<code>is_required</code>):</strong> Al activar esta casilla, el colaborador debe completarla obligatoriamente para alcanzar el 100% de avance y aspirar al diploma.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 4.3 Subir Recursos -->
+        <div id="subir-recursos" class="step-card">
+          <div class="step-header">
+            <div class="step-number">3</div>
+            <div class="step-title">Carga de Videos, Presentaciones y Documentos</div>
+          </div>
+          <div class="step-body">
+            <p>En la lección creada, presione <strong>"Subir Recurso"</strong> (<code>UploadResourceForm</code>):</p>
+            
+            <div class="grid-2" style="margin-top: 1rem;">
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
+                <h5 style="color:#38bdf8; font-family:'Outfit'; font-size:1rem; margin-bottom:0.4rem;">🎬 Carga de Videos (MP4)</h5>
+                <p style="font-size:0.85rem; color:var(--text-muted);">
+                  Suba archivos <code>.mp4</code> (recomendado H.264 / AAC, hasta 200MB). El servidor procesa el archivo con soporte de <em>Range Requests (206)</em>, permitiendo reproducción y saltos de tiempo sin pausas de carga.
+                </p>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
+                <h5 style="color:#34d399; font-family:'Outfit'; font-size:1rem; margin-bottom:0.4rem;">📊 Presentaciones y PDFs</h5>
+                <p style="font-size:0.85rem; color:var(--text-muted);">
+                  Suba diapositivas <code>.pptx</code> o manuales <code>.pdf</code>. La plataforma los renderiza en un visor interactivo integrado a pantalla completa, eliminando la necesidad de abrir aplicaciones externas.
+                </p>
+              </div>
+            </div>
+
+            <div class="callout callout-tip">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              <div><strong>Limpieza Automática:</strong> Si elimina una lección o módulo, el sistema borra físicamente los archivos del disco del servidor, previniendo el almacenamiento de recursos huérfanos.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4.4 Diseñar Exámenes -->
+        <div id="disenar-examenes" class="step-card">
+          <div class="step-header">
+            <div class="step-number">4</div>
+            <div class="step-title">Diseñar y Configurar Exámenes (Quizzes)</div>
+          </div>
+          <div class="step-body">
+            <p>En cualquier lección configurada como <code>QUIZ</code>, pulse en <strong>"Gestionar Examen"</strong> para abrir el constructor visual:</p>
+            
+            <h5 style="color:white; margin: 0.8rem 0 0.4rem 0;">A. Parámetros del Examen (Pestaña "Ajustes"):</h5>
+            <ul>
+              <li><strong>Calificación Mínima:</strong> Porcentaje para aprobar (ej. <code>80%</code>).</li>
+              <li><strong>Límite de Tiempo:</strong> Temporizador en cuenta regresiva en minutos (ej. <code>20</code> min).</li>
+              <li><strong>Intentos Máximos:</strong> Oportunidades permitidas antes de requerir autorización docente (ej. <code>3</code> intentos).</li>
+              <li><strong>Aleatorizar Reactivos:</strong> Cambia el orden de preguntas para evitar respuestas memorizadas entre colegas.</li>
+            </ul>
+
+            <h5 style="color:white; margin: 1rem 0 0.4rem 0;">B. Banco de Reactivos (Pestaña "Preguntas"):</h5>
+            <div class="grid-2">
+              <div class="card" style="padding:1rem;">
+                <span class="card-badge badge-blue">Opción Múltiple</span>
+                <p style="margin-top:0.4rem; font-size:0.85rem;">Enunciado con 3 o más opciones y marcado de la respuesta correcta.</p>
+              </div>
+              <div class="card" style="padding:1rem;">
+                <span class="card-badge badge-green">Verdadero / Falso</span>
+                <p style="margin-top:0.4rem; font-size:0.85rem;">Afirmación directa con resolución binaria calificada al instante.</p>
+              </div>
+              <div class="card" style="padding:1rem;">
+                <span class="card-badge badge-purple">Correspondencia / Matching</span>
+                <p style="margin-top:0.4rem; font-size:0.85rem;">Emparejamiento interactivo de conceptos contra sus definiciones.</p>
+              </div>
+              <div class="card" style="padding:1rem;">
+                <span class="card-badge badge-amber">Respuesta Abierta</span>
+                <p style="margin-top:0.4rem; font-size:0.85rem;">Pregunta de redacción y criterio que pasa al flujo de revisión manual docente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4.5 Calificación Manual -->
+        <div id="calificar-abiertas" class="step-card">
+          <div class="step-header">
+            <div class="step-number">5</div>
+            <div class="step-title">Calificación Manual de Preguntas Abiertas</div>
+          </div>
+          <div class="step-body">
+            <p>Cuando un examen incluye respuestas abiertas, la plataforma emite un estado de <strong>"Revisión Pendiente"</strong>:</p>
+            <ol>
+              <li>El instructor accede al examen o al <strong>Gradebook</strong> y pulsa en <strong>"Calificar Respuesta"</strong>.</li>
+              <li>Se despliega el modal donde lee la respuesta redactada por el alumno.</li>
+              <li>Asigna los puntos obtenidos (de 0 al tope de la pregunta) y escribe una <strong>retroalimentación formativa</strong>.</li>
+              <li>Al pulsar <strong>"Guardar Calificación"</strong>, el sistema recalcula el promedio y, si el alumno acredita, se genera de inmediato su certificado.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 4.6 Gradebook -->
+        <div id="gradebook" class="step-card">
+          <div class="step-header">
+            <div class="step-number">6</div>
+            <div class="step-title">Libro de Calificaciones (Gradebook)</div>
+          </div>
+          <div class="step-body">
+            <p>Acceda a <code>/gradebook</code> para ver la matriz completa de notas de sus cursos:</p>
+            <ul>
+              <li><strong>Promedio Oficial Ponderado:</strong> Se calcula estrictamente como el promedio de todas las lecciones requeridas que tienen evaluación asociada.</li>
+              <li><strong>Scoping Docente:</strong> Los instructores únicamente ven el Gradebook de los cursos que ellos mismos imparten.</li>
+              <li><strong>Exportar a Excel:</strong> Descargue el reporte en formato CSV con firma UTF-8 BOM, garantizando perfecta lectura de tildes y caracteres en español.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Guía para el Colaborador -->
+      <section id="seccion-colaborador" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <h2>5. Guía para el Colaborador: Cómo Realizar sus Capacitaciones</h2>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+          Bienvenido a su portal de estudio. Esta guía le indica cómo inscribirse, estudiar los materiales a su propio ritmo, resolver sus pruebas y descargar su diploma oficial.
+        </p>
+
+        <!-- 5.1 Catálogo e Inscripción -->
+        <div id="inscribirse" class="step-card">
+          <div class="step-header">
+            <div class="step-number">1</div>
+            <div class="step-title">Explorar el Catálogo e Inscribirse</div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>En el menú lateral, diríjase a <strong>Catálogo de Cursos</strong> (<code>/courses</code>).</li>
+              <li>Encontrará la lista de capacitaciones autorizadas para su empresa. Puede buscar por tema o filtrar por nivel.</li>
+              <li>Haga clic sobre el curso de su interés para leer el temario completo.</li>
+              <li>Presione el botón <strong>"Inscribirme a este Curso"</strong>. Su inscripción será inmediata y el curso se vinculará a su historial.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 5.2 Estudiar Lecciones -->
+        <div id="cursar-lecciones" class="step-card">
+          <div class="step-header">
+            <div class="step-number">2</div>
+            <div class="step-title">Cursar Lecciones Multimedia</div>
+          </div>
+          <div class="step-body">
+            <p>Acceda a su curso y utilice el panel lateral de contenidos:</p>
+            <ul>
+              <li><strong>Lecciones de Video (▶️):</strong> Presione reproducir. Puede pausar, retroceder 10 segundos, ajustar la velocidad o maximizar a pantalla completa. Su avance queda registrado en la plataforma.</li>
+              <li><strong>Presentaciones y Manuales (📄):</strong> Utilice el visor integrado para leer las diapositivas o documentos PDF. Puede ampliar el zoom y desplazarse página por página sin descargar archivos adicionales.</li>
+              <li><strong>Marcar como Completada:</strong> Al concluir la lección, haga clic en el botón inferior <strong>"Marcar como completada"</strong>. Su barra de progreso en el curso aumentará al instante.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 5.3 Presentar Quizzes -->
+        <div id="responder-quizzes" class="step-card">
+          <div class="step-header">
+            <div class="step-number">3</div>
+            <div class="step-title">Presentar Exámenes y Quizzes</div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>Al abrir la lección de evaluación, revise las instrucciones: nota mínima, número de intentos disponibles y tiempo límite.</li>
+              <li>Haga clic en <strong>"Iniciar Examen"</strong>.</li>
+              <li>Si la prueba tiene tiempo asignado, observe el <strong>temporizador en cuenta regresiva</strong> en la parte superior y asegúrese de responder con tranquilidad.</li>
+              <li>Responda las preguntas de opción múltiple, verdadero/falso, relación de columnas o desarrolle su respuesta abierta.</li>
+              <li>Al finalizar, pulse en <strong>"Enviar Examen"</strong>:
+                <ul>
+                  <li><strong>Preguntas cerradas:</strong> Verá su nota y el veredicto <em>(Aprobado / No Aprobado)</em> en cuestión de segundos.</li>
+                  <li><strong>Preguntas abiertas:</strong> Su prueba se marcará como enviada y su docente le asignará la nota en breve.</li>
+                </ul>
+              </li>
+              <li>Si no alcanza el porcentaje aprobatorio, puede pulsar en <strong>"Reintentar Examen"</strong> siempre que conserve intentos disponibles.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 5.4 Descargar Certificado -->
+        <div id="descargar-certificado" class="step-card">
+          <div class="step-header">
+            <div class="step-number">4</div>
+            <div class="step-title">Acreditación y Descarga de Certificado Oficial</div>
+          </div>
+          <div class="step-body">
+            <p>La expedición de su diploma institucional se realiza de forma 100% automatizada:</p>
+            <ul>
+              <li><strong>Condición de Emisión:</strong> Tener el <strong>100%</strong> de las lecciones obligatorias completadas y una <strong>calificación final aprobatoria</strong> (generalmente &ge; 80%).</li>
+              <li><strong>Alerta en Tiempo Real:</strong> La campana de notificaciones 🔔 le avisará en cuanto su diploma esté listo.</li>
+              <li><strong>Descarga:</strong> Ingrese a la sección <strong>"Mis Certificados"</strong> (<code>/certificates</code>), localice su curso y pulse en <strong>"Descargar Certificado (PDF)"</strong>.</li>
+              <li>Su certificado incluye diseño apaisado con el branding de su empresa, su nombre completo, calificación y su <strong>Folio Único Oficial</strong> para validación en auditorías de calidad.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Guía para Gerentes -->
+      <section id="seccion-gerentes" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <h2>6. Guía para Gerentes: Monitoreo de Equipo y Reportes</h2>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <h4>Panel de Equipo (/team)</h4>
+            <p>Supervise en un solo vistazo el porcentaje de cumplimiento de su área, horas acumuladas y el desglose de colaboradores rezagados vs. al corriente.</p>
+          </div>
+
+          <div class="card">
+            <h4>Inscripción Masiva</h4>
+            <p>Desde la ficha de cualquier curso, abra <em>"Inscribir Colaboradores"</em> y asigne obligatoriamente la capacitación a todo su departamento con un solo clic.</p>
+          </div>
+
+          <div class="card">
+            <h4>Reportes Ejecutivos (/reports)</h4>
+            <p>Genere sábanas de datos por curso, colaborador o departamento y descárguelas en Excel (CSV) o imprímalas en formato PDF ejecutivo.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Preguntas Frecuentes -->
+      <section id="faq" class="section-block">
+        <div class="section-header">
+          <div class="section-icon-box">
+            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h2>7. Preguntas Frecuentes y Resolución de Incidencias</h2>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            ¿Qué hago si un video de capacitación no reproduce o se congela?
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            Compruebe su conexión a la red interna. El reproductor hace streaming inteligente; si adelanta repentinamente la reproducción, espere 2 segundos a que el servidor entregue el nuevo fragmento. Si persiste, recargue la página con <kbd>F5</kbd>.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            ¿Por qué terminé todas las lecciones pero mi barra no llega al 100%?
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            Asegúrese de haber pulsado el botón <strong>"Marcar como completada"</strong> en cada una de las lecciones obligatorias. Las lecciones deben mostrar una casilla de verificación verde en el índice lateral.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            ¿Por qué aprobé mi examen pero aún no aparece mi certificado?
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            El certificado se emite al cumplir simultáneamente dos factores: 100% de lecciones obligatorias concluidas y promedio final &ge; nota mínima. Si el examen contenía preguntas abiertas, el diploma se activará automáticamente en cuanto el docente califique sus respuestas.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            ¿Qué sucede si agoto todos los intentos disponibles en un examen?
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            El sistema bloqueará el cuestionario para evitar intentos arbitrarios. Deberá comunicarse con el instructor asignado o con su Gerente de área para que revisen su caso pedagógico y le asignen un intento adicional de recuperación.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            ¿Puedo tomar capacitaciones desde una tableta o celular?
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            Sí. Toda la plataforma Academy LMS está diseñada con arquitectura responsiva y controles táctiles nativos. Puede reproducir videos, estudiar diapositivas y contestar quizzes desde cualquier dispositivo móvil conectado a la red.
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer Info -->
+      <footer style="margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-dim); font-size: 0.85rem;">
+        <p>Academy LMS &copy; 2026 &middot; CorpoSuite &middot; Kezelmedica &middot; Red Beat &middot; Vitaris</p>
+        <p style="margin-top: 0.35rem;">Documento oficial para fines de capacitación interna, auditoría y control de calidad.</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    function toggleFaq(button) {
+      const item = button.parentElement;
+      item.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>

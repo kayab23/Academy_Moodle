@@ -1,6 +1,7 @@
 # 🎓 Academy LMS
 Plataforma empresarial de capacitación, gestión de cursos y seguimiento de competencias inspirada en Moodle, diseñada con arquitectura multi-empresa para **Kezelmedica**, **Red Beat** y **Vitaris**.
 
+Para el manual interactivo institucional, consulta [MANUAL.html](MANUAL.html) (o en formato Markdown [MANUAL.md](MANUAL.md)).  
 Para el detalle de investigación, arquitectura, módulos y fases, consulta [PLAN.md](PLAN.md).  
 Para las reglas estrictas de seguridad, base de datos y estándares de calidad, consulta [SPEC.md](SPEC.md).
 
