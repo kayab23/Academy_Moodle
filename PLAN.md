@@ -471,6 +471,7 @@ SIGE_SERVICE_TOKEN=
 - [x] Optimización de rendimiento — queries agregadas optimizadas en Prisma, 0 advertencias de compilación
 - [x] Testing y QA — validación automatizada contra PostgreSQL local con cursos en las 3 empresas
 - [x] **Criterio de aceptación**: los reportes exportados en CSV coinciden con los datos mostrados en pantalla para al menos un curso de prueba en cada una de las 3 empresas — **probado y verificado de extremo a extremo contra PostgreSQL local**.
+- [x] **Auditoría de seguridad post-Fase 3-6** (2026-09-11): pase de verificación que encontró y corrigió 3 clases de problema real: (a) 9 rutas de mutación de quizzes/calificación/notificaciones sin `isTrustedOrigin()` fuera del matcher de `middleware.ts`, dependiendo solo de la cookie `SameSite=None` (SPEC.md 1.7/1.9); (b) certificados y gradebook sin scoping por `instructorId` — un instructor veía/gestionaba cursos de su empresa que no eran suyos (SPEC.md 1.2, regla agregada); (c) 13 rutas devolviendo `err.message` crudo al cliente (SPEC.md 1.13). También se cerró un hueco de inyección de fórmulas CSV en `escapeCsvCell()`. Verificado en vivo contra el entorno real, no solo en local.
 
 
 ---
@@ -514,16 +515,31 @@ SIGE es la fuente de verdad de usuarios y empresa (ya tiene ~250 colaboradores r
 
 #### Contrato técnico
 
-- **Endpoint nuevo en Academy** (a construir): `POST /api/integrations/sige/sso-issue`
+- **Endpoint en Academy** (implementado): `POST /api/integrations/sige/sso-issue` — `src/app/api/integrations/sige/sso-issue/route.ts`
   - Autenticado con un token de servicio dedicado (`SIGE_SERVICE_TOKEN`), nunca con la sesión del usuario final — mismo patrón ya validado en producción entre Vitaris y CRM.
   - Recibe `{ email, fullName, companySlug, role }` — SIGE ya tiene estos datos en `profiles`/`collaborator_registry`, normalizando `empresa` a minúsculas tal como se documentó arriba.
   - Efecto: busca el `User` por email; si no existe, lo crea (`companyId` resuelto desde `companySlug`); genera un token de acceso de un solo uso con expiración corta (ej. 60 segundos) — mismo patrón que `account_activation_tokens`/`password_reset_tokens` ya usado en SIGE.
   - Responde `{ accessUrl: "https://academy.corposuitekrv.com/enlace-acceso?token=..." }`.
-- **Página nueva en Academy** (a construir): `/enlace-acceso?token=...`
+- **Página en Academy** (implementada): `/enlace-acceso?token=...` — `src/app/enlace-acceso/page.tsx`
   - Valida el token (existe, no usado, no expirado), lo marca usado, crea la sesión NextAuth normal (mismo `authOptions` de siempre) y redirige a `/dashboard`.
   - Detecta si corre dentro de un iframe (`window.self !== window.top`) y, si es así, oculta su propio navbar/sidebar de nivel superior — para no duplicar la navegación que ya provee SIGE alrededor.
 - **Cabecera de seguridad** (excepción puntual y acotada, no una relajación general): en `next.config.js`, sustituir el `X-Frame-Options: DENY` genérico por `Content-Security-Policy: frame-ancestors 'self' https://sige.corposuitekrv.com;`. Sigue bloqueado para cualquier otro sitio del mundo — la única excepción, a propósito, es `sige.corposuitekrv.com`.
 - **Del lado de SIGE**: la entrada de navbar, la llamada al endpoint de arriba, y el `<iframe>` que consume `accessUrl`. Instrucciones completas y precisas para ese lado en el archivo `SIGE_INTEGRATION.md` (en la raíz de este repo), pensado para copiarse al repositorio de SIGE y ejecutarse ahí por otro agente.
+
+#### Mapeo de rol SIGE → Academy (`mapSigeRole()`)
+
+El campo `role` que manda SIGE en el body de `sso-issue` es un string libre; Academy lo traduce a su enum `Role` con esta tabla (`mapSigeRole()` en `sso-issue/route.ts`):
+
+| Rol reportado por SIGE | Rol asignado en Academy |
+|:---|:---|
+| `ADMIN`, `DIRECCION` | `ADMIN` |
+| `GERENTE`, `COORDINADOR`, `MANAGER` | `MANAGER` |
+| `INSTRUCTOR`, `DOCENTE` | `INSTRUCTOR` |
+| Cualquier otro valor, o ausente | `COLLABORATOR` (default) |
+
+Este mapeo solo se aplica **al aprovisionar** un usuario nuevo. En logins posteriores de un usuario ya existente, Academy **no vuelve a sincronizar** su rol desde SIGE — el rol guardado en Academy es autoritativo una vez creado, salvo la excepción explícita de abajo.
+
+**Excepción explícita — `ADMIN_ROLE_OVERRIDE_EMAILS`**: una lista fija de correos, hardcodeada en `sso-issue/route.ts`, que siempre recibe rol `ADMIN` en Academy sin importar lo que reporte SIGE — se reconcilia en cada login (si el rol guardado no es `ADMIN`, se corrige antes de emitir el token de acceso) y queda registrada en `ActivityLog` como `USER_ROLE_OVERRIDDEN_VIA_SSO`. Es la única excepción, a propósito, al principio "SIGE manda, Academy obedece" de esta sección — igual de acotada y documentada que la excepción de `frame-ancestors` de arriba. Cualquier corrección a esta lista (agregar o quitar a alguien) es un cambio de código, revisado como cualquier otro, no una configuración dinámica. Ver SPEC.md 1.12 para la regla de seguridad correspondiente.
 
 #### Por qué esto sigue siendo un módulo independiente, no un monolito
 

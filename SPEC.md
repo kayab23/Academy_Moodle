@@ -22,6 +22,7 @@ Cada regla usa **DEBE / NO DEBE** para dejar cero ambigüedad. Ninguna fase de P
 - DEBE centralizarse la lógica de permisos en `src/lib/scope.ts` (o equivalente) y ser reutilizada — NO DEBE reimplementarse la lógica de "¿puede este usuario ver/editar X?" de forma dispersa en cada endpoint.
 - Cada Server Action / API Route que mute datos DEBE verificar explícitamente: (a) sesión válida, (b) rol autorizado para esa acción, (c) pertenencia a la empresa (`companyId`) del recurso afectado, salvo rol `ADMIN`.
 - DEBE aplicarse el **aislamiento multi-empresa como control de seguridad, no solo de negocio**: cualquier query que devuelva datos de `Course`, `Enrollment`, `Grade`, `Certificate`, `User`, etc. DEBE filtrar por `companyId` salvo `ADMIN`. Un fallo aquí se trata como vulnerabilidad crítica (fuga de datos entre empresas), no como bug menor.
+- El scoping de `INSTRUCTOR` NO DEBE quedarse en `companyId`: todo endpoint que devuelva datos de un curso específico (gradebook, certificados, materiales, quizzes, intentos) DEBE además verificar `course.instructorId === session.user.id` — un instructor solo ve/gestiona **sus propios cursos**, no todos los de su empresa. Esto se encontró roto dos veces por separado en auditoría (certificados y gradebook filtraban por empresa pero no por instructor asignado) — al agregar un endpoint nuevo con datos por curso, este chequeo se verifica explícitamente, no se asume cubierto por el filtro de empresa.
 
 ### 1.3 Sesiones
 
@@ -89,6 +90,7 @@ DEBEN configurarse globalmente (Next.js `headers()` en `next.config.js`):
 - Si en el futuro se construye una integración servidor-a-servidor con otro módulo (incluido el puente de identidad de arriba), DEBE usarse un token de servicio dedicado (no un token de sesión de usuario), con origen explícitamente permitido (whitelist), y sin depender de cookies cross-domain — siguiendo el patrón ya validado en producción entre Vitaris y CRM.
 - Cualquier endpoint expuesto para consumo de otro módulo DEBE ser de solo lectura salvo que se justifique explícitamente lo contrario (el puente de identidad es la excepción justificada: crea/actualiza un `User`), y DEBE registrarse en `ActivityLog` como cualquier otra acción sensible.
 - El token de un solo uso del puente de identidad DEBE almacenarse hasheado (nunca en texto plano), marcarse `used` tras su primer consumo, y rechazarse si ya fue usado o si expiró — mismo criterio que `password_reset_tokens`.
+- El rol que asigna el puente de identidad DEBE derivarse del `role` que reporta SIGE (`mapSigeRole()` en `sso-issue/route.ts`) — Academy NO DEBE tener una vía alterna para que un cliente asigne rol directamente. La única excepción permitida es una lista explícita y acotada de correos hardcodeada en el propio endpoint (`ADMIN_ROLE_OVERRIDE_EMAILS`) que fuerza un rol fijo sin importar lo que reporte SIGE; cualquier cambio a esa lista DEBE hacerse en código y pasar revisión como cualquier otro cambio, nunca vía variable de entorno o configuración editable en caliente, y DEBE quedar registrado en `ActivityLog` cada vez que se aplica (`USER_ROLE_OVERRIDDEN_VIA_SSO`).
 
 ### 1.13 Dependencias y manejo de errores
 
