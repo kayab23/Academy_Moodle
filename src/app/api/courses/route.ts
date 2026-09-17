@@ -11,7 +11,7 @@ import { CourseDifficulty, Role } from '@prisma/client';
 const createCourseSchema = z.object({
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres').max(200),
   description: z.string().max(2000).optional(),
-  categoryId: z.string().cuid().optional().nullable(),
+  categoryId: z.string().min(1).optional().nullable(),
   difficulty: z.nativeEnum(CourseDifficulty).optional(),
   passingScore: z.number().min(0).max(100).optional(),
   companyIds: z.array(z.string().cuid()).optional(),

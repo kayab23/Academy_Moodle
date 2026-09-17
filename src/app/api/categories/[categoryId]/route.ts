@@ -11,7 +11,7 @@ import { Role } from '@prisma/client';
 const updateCategorySchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100).optional(),
   description: z.string().max(500).optional().nullable(),
-  parentId: z.string().cuid().optional().nullable(),
+  parentId: z.string().min(1).optional().nullable(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: { categoryId: string } }) {
