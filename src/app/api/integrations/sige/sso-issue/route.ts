@@ -52,6 +52,15 @@ function mapSigeRole(rawRole?: string): Role {
   return Role.COLLABORATOR;
 }
 
+// Usuarios que siempre deben tener ADMIN en Academy, sin importar el rol que
+// mande SIGE (ni cambios futuros de rol en SIGE). Se reconcilia en cada login.
+const ADMIN_ROLE_OVERRIDE_EMAILS = new Set([
+  'academy02@redbeat.mx', // Jean Brandon Pioquinto Escalona
+  'academy@redbeat.mx', // Anabel Barraza López
+  'di.academy02@redbeat.mx', // Miriam Montserrat Carranza Alcántara
+  'di.academy03@redbeat.mx', // Diana Paola Ramírez Cabrera
+]);
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
   if (isRateLimited(ip)) {
@@ -104,7 +113,8 @@ export async function POST(req: NextRequest) {
     where: { email: normalizedEmail },
   });
 
-  const targetRole = mapSigeRole(role);
+  const isAdminOverride = ADMIN_ROLE_OVERRIDE_EMAILS.has(normalizedEmail);
+  const targetRole = isAdminOverride ? Role.ADMIN : mapSigeRole(role);
 
   if (!user) {
     // Generar hash aleatorio seguro (no se usará para login por password)
@@ -127,13 +137,27 @@ export async function POST(req: NextRequest) {
       action: 'USER_PROVISIONED_VIA_SSO',
       entityType: 'User',
       entityId: user.id,
-      metadata: { origin: 'SIGE', email: user.email, companySlug: normalizedSlug },
+      metadata: { origin: 'SIGE', email: user.email, companySlug: normalizedSlug, roleOverride: isAdminOverride },
     });
   } else if (!user.isActive) {
     return NextResponse.json(
       { error: 'El usuario se encuentra inactivo en Academy LMS.' },
       { status: 403 }
     );
+  } else if (isAdminOverride && user.role !== Role.ADMIN) {
+    // Reconciliar en cada login: si SIGE cambia el rol de esta persona, Academy lo ignora.
+    user = await db.user.update({
+      where: { id: user.id },
+      data: { role: Role.ADMIN },
+    });
+
+    await logActivity({
+      userId: user.id,
+      action: 'USER_ROLE_OVERRIDDEN_VIA_SSO',
+      entityType: 'User',
+      entityId: user.id,
+      metadata: { origin: 'SIGE', email: user.email, newRole: Role.ADMIN },
+    });
   }
 
   // 3. Generar token de acceso de un solo uso (corta expiración: 60s)
