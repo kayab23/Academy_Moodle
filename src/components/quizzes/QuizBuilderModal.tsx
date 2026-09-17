@@ -543,7 +543,7 @@ export function QuizBuilderModal({
                       <input
                         type="number"
                         min="0.1"
-                        step="0.5"
+                        step="any"
                         required
                         className="form-input"
                         value={newPoints}
