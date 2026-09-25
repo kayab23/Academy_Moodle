@@ -17,8 +17,10 @@ export default async function RootLayout({
 }) {
   const messages = await getMessages();
 
+  // Oscuro por defecto (Academy nació oscuro). Dentro de SIGE, sige-embed.js cambia data-theme/dark según el tema de SIGE.
+
   return (
-    <html lang="es">
+    <html lang="es" data-theme="dark" className="dark" suppressHydrationWarning>
       <head>
         {/* Protocolo SIGE (OPS-013): se inicializa solo con data-app; fuera de un iframe no hace nada */}
         <script src="/sige-embed.js" data-app="academy" defer></script>
