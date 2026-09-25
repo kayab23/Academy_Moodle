@@ -46,7 +46,9 @@ function isValidServiceToken(authHeader: string | null, expected: string): boole
 function mapSigeRole(rawRole?: string): Role {
   if (!rawRole) return Role.COLLABORATOR;
   const upper = rawRole.toUpperCase();
-  if (upper === 'ADMIN' || upper === 'DIRECCION') return Role.ADMIN;
+  // SUPER_ADMIN: SIGE le dio acceso a las 5 plataformas (homologación de accesos, 2026-09-25); entra
+  // como administrador de la empresa que SIGE reporta (RedBeat), no cross-company.
+  if (upper === 'ADMIN' || upper === 'DIRECCION' || upper === 'SUPER_ADMIN') return Role.ADMIN;
   if (upper === 'GERENTE' || upper === 'COORDINADOR' || upper === 'MANAGER') return Role.MANAGER;
   if (upper === 'INSTRUCTOR' || upper === 'DOCENTE') return Role.INSTRUCTOR;
   return Role.COLLABORATOR;
