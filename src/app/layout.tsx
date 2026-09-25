@@ -19,6 +19,10 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
+      <head>
+        {/* Protocolo SIGE (OPS-013): se inicializa solo con data-app; fuera de un iframe no hace nada */}
+        <script src="/sige-embed.js" data-app="academy" defer></script>
+      </head>
       <body>
         <AuthProvider>
           <NextIntlClientProvider messages={messages}>

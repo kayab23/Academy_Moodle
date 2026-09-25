@@ -1,21 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import './sige-tokens.v1.css';
+@import './sige-fonts.css';
 
 :root {
-  /* Dynamic Company Branding (overridden via inline style on root/body) */
-  --brand-primary: #3b82f6;
-  --brand-primary-hover: #2563eb;
-  --brand-secondary: #8b5cf6;
-  --brand-gradient: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+  /* Dynamic Company Branding (overridden via inline style on root/body o sige:theme) */
+  --brand-primary: var(--sige-brand-500, #3b82f6);
+  --brand-primary-hover: var(--sige-brand-from, #2563eb);
+  --brand-secondary: var(--sige-brand-accent, #8b5cf6);
+  --brand-gradient: linear-gradient(135deg, var(--sige-brand-from, #111241) 0%, var(--sige-brand-to, #05a3aa) 100%);
   --brand-glow: rgba(59, 130, 246, 0.25);
 
-  /* Surface & Background (Dark Theme First) */
-  --bg-main: #0a0e17;
-  --bg-surface: #111827;
-  --bg-surface-elevated: #1a2234;
+  /* Surface & Background (Dark Theme First, adaptable a sige:theme) */
+  --bg-main: var(--sige-bg, #0a0e17);
+  --bg-surface: var(--sige-surface, #111827);
+  --bg-surface-elevated: var(--sige-surface-2, #1a2234);
   --bg-surface-hover: #232d42;
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-subtle: var(--sige-border, rgba(255, 255, 255, 0.08));
   --border-strong: rgba(255, 255, 255, 0.16);
-  --border-focus: rgba(59, 130, 246, 0.5);
+  --border-focus: var(--sige-brand-500, rgba(59, 130, 246, 0.5));
 
   /* Glassmorphism */
   --glass-bg: rgba(17, 24, 39, 0.75);
@@ -23,12 +24,12 @@
   --glass-backdrop: blur(16px);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
-  /* Typography */
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', 'Inter', sans-serif;
-  --text-primary: #f9fafb;
+  /* Typography (Outfit única para texto y títulos — D2 / OPS-013) */
+  --font-body: var(--sige-font-sans, 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif);
+  --font-heading: var(--sige-font-sans, 'Outfit', sans-serif);
+  --text-primary: var(--sige-text, #f9fafb);
   --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-muted: var(--sige-text-muted, #6b7280);
   --text-inverted: #030712;
 
   /* Font Scales */

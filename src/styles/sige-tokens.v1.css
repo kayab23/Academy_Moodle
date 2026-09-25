@@ -1,0 +1,81 @@
+/**
+ * SIGE Design Tokens — Versión 1.0 (sige-tokens.v1.css)
+ * Documento rector: PLAN_HOMOLOGACION_VISUAL_Y_RENDIMIENTO.md (OPS-013)
+ * Fuente única de verdad visual para SIGE y sus aplicaciones satélite (Academy, CLM, SCOM, Costos Vitaris, WMS).
+ */
+
+:root,
+html:not(.dark),
+[data-theme="light"] {
+  /* ── Superficie (Light) ── */
+  --sige-bg: #f8fafc;
+  --sige-surface: #ffffff;
+  --sige-surface-2: #f1f5f9;
+  --sige-border: rgba(15, 23, 42, 0.08);
+
+  /* ── Texto (Light) ── */
+  --sige-text: #0f172a;
+  --sige-text-muted: #64748b;
+
+  /* ── Marca por defecto (Kezelmedica) — se actualiza en vivo por postMessage ── */
+  --sige-brand-from: #111241;
+  --sige-brand-to: #05a3aa;
+  --sige-brand-accent: #a4d166;
+  --sige-brand-500: #05a3aa;
+
+  /* ── Estados (Light) ── */
+  --sige-success: #10b981;
+  --sige-warning: #f59e0b;
+  --sige-danger: #ef4444;
+  --sige-info: #3b82f6;
+
+  /* ── Formas y Sombras ── */
+  --sige-radius-sm: 0.25rem;
+  --sige-radius-md: 0.5rem;
+  --sige-radius-lg: 0.75rem;
+  --sige-radius-xl: 1rem;
+  --sige-shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --sige-shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+
+  /* ── Tipografía (Outfit única para texto, JetBrains Mono para código) ── */
+  --sige-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --sige-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sige-text-xs: 0.75rem;
+  --sige-text-sm: 0.875rem;
+  --sige-text-base: 1rem;
+  --sige-text-lg: 1.125rem;
+  --sige-text-xl: 1.25rem;
+  --sige-text-2xl: 1.5rem;
+}
+
+:root[data-theme="dark"],
+html.dark,
+[data-theme="dark"] {
+  /* ── Superficie (Dark) ── */
+  --sige-bg: #0b1120;
+  --sige-surface: #0f172a;
+  --sige-surface-2: #1e293b;
+  --sige-border: rgba(255, 255, 255, 0.08);
+
+  /* ── Texto (Dark) ── */
+  --sige-text: #f8fafc;
+  --sige-text-muted: #94a3b8;
+
+  /* ── Estados (Dark) ── */
+  --sige-success: #34d399;
+  --sige-warning: #fbbf24;
+  --sige-danger: #f87171;
+  --sige-info: #60a5fa;
+
+  /* ── Sombras (Dark) ── */
+  --sige-shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+  --sige-shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* Ocultar elementos de navegación externa cuando la app está embebida en SIGE (D7) */
+[data-embedded="true"] header,
+[data-embedded="true"] .navbar,
+[data-embedded="true"] .topbar,
+[data-embedded="true"] .sige-hide-embedded {
+  display: none !important;
+}
