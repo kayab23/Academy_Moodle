@@ -167,10 +167,14 @@ export async function POST(req: NextRequest) {
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
   const expiresAt = new Date(Date.now() + 60 * 1000); // 60 segundos
 
+  const isSuperAdmin = (role || '').toLowerCase().trim() === 'super_admin';
+  const companyOverrideId = mapSigeRole(role) === Role.ADMIN && isSuperAdmin ? company.id : null;
+
   await db.ssoToken.create({
     data: {
       tokenHash,
       userId: user.id,
+      companyOverrideId,
       expiresAt,
       used: false,
     },

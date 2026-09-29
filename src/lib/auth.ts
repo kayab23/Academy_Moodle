@@ -86,7 +86,10 @@ export const authOptions: NextAuthOptions = {
 
           const ssoRecord = await db.ssoToken.findUnique({
             where: { tokenHash },
-            include: { user: { include: { company: true } } },
+            include: {
+              user: { include: { company: true } },
+              companyOverride: true,
+            },
           });
 
           if (
@@ -94,7 +97,8 @@ export const authOptions: NextAuthOptions = {
             ssoRecord.used ||
             ssoRecord.expiresAt < new Date() ||
             !ssoRecord.user.isActive ||
-            !ssoRecord.user.company.isActive
+            !ssoRecord.user.company.isActive ||
+            (ssoRecord.companyOverride && !ssoRecord.companyOverride.isActive)
           ) {
             return null;
           }
@@ -112,13 +116,18 @@ export const authOptions: NextAuthOptions = {
           }
 
           const user = ssoRecord.user;
+          const effectiveCompany = ssoRecord.companyOverride || user.company;
 
           await logActivity({
             userId: user.id,
             action: 'SSO_LOGIN',
             entityType: 'User',
             entityId: user.id,
-            metadata: { origin: 'SIGE_BRIDGE', email: user.email },
+            metadata: {
+              origin: 'SIGE_BRIDGE',
+              email: user.email,
+              companyOverride: ssoRecord.companyOverride ? ssoRecord.companyOverride.slug : null,
+            },
           });
 
           return {
@@ -126,8 +135,8 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
-            companyId: user.companyId,
-            companySlug: user.company.slug,
+            companyId: effectiveCompany.id,
+            companySlug: effectiveCompany.slug,
             locale: user.locale,
           };
         }
