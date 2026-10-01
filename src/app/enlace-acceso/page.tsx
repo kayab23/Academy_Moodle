@@ -33,8 +33,9 @@ export default function EnlaceAccesoPage() {
 
         if (res && res.ok && !res.error) {
           setStatus('success');
-          // Redirigir de inmediato al dashboard
-          router.push('/dashboard');
+          // Redirigir de inmediato al dashboard. `replace` (no `push`): así esta página de canje, con el
+          // ticket ya consumido, no queda en el historial y «Atrás» no regresa a un «enlace expirado».
+          router.replace('/dashboard');
           router.refresh();
         } else {
           setStatus('error');
