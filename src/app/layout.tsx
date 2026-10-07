@@ -53,6 +53,8 @@ export default async function RootLayout({
         />
         {/* Protocolo SIGE (OPS-013): se inicializa solo con data-app; fuera de un iframe no hace nada */}
         <script src="/sige-embed.js?v=3" data-app="academy" defer></script>
+        {/* Cierre de sesión en cascada: SIGE manda sige:logout y se borra la cookie de sesión de Academy */}
+        <script src="/sige-logout.js?v=1" data-endpoint="/api/integrations/sige/logout" defer></script>
       </head>
       <body>
         <AuthProvider>
